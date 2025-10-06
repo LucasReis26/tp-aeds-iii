@@ -9,3 +9,5 @@ storage faz o armazenametno fisico dos registros
 buffer cache, carrega paginas do storage pra ram
 query recebe a query gerada pelo parser e faz as coisas q ela manda
 index faz buscas usando indices
+
+a funcao do gitkeep eh ele commitar os diretorios
