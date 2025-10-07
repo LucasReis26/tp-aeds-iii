@@ -1,11 +1,12 @@
 package com.example.tpaedsiii.repository.BD;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Constructor;
 
 public class Arquivo<T extends Registro> {
-    private static final int TAM_CABECALHO = 4;
+    private static final int TAM_CABECALHO = 12; // 4 bytes (ID) + 8 bytes (lista deletados)
     private RandomAccessFile arquivo;
     private String nomeArquivo;
     private Constructor<T> construtor;
@@ -14,7 +15,7 @@ public class Arquivo<T extends Registro> {
 
         File diretorio = new File("./src/main/java/com/example/tpaedsiii/repository/BD/data/filmes");
         if (!diretorio.exists()) {
-            diretorio.mkdirs(); 
+            diretorio.mkdirs();
         }
 
         this.nomeArquivo = diretorio.getPath() + "/" + nomeArquivo + ".db";
@@ -22,9 +23,9 @@ public class Arquivo<T extends Registro> {
         this.construtor = construtor;
         this.arquivo = new RandomAccessFile(this.nomeArquivo, "rw");
 
-        if (arquivo.length() < TAM_CABECALHO) {
-            arquivo.writeInt(0); 
-            arquivo.writeLong(-1); 
+        if (arquivo.length() == 0) {
+            arquivo.writeInt(0);
+            arquivo.writeLong(-1);
         }
     }
 
@@ -52,58 +53,96 @@ public class Arquivo<T extends Registro> {
     }
 
     public T read(int id) throws Exception {
-        arquivo.seek(TAM_CABECALHO);
-        while (arquivo.getFilePointer() < arquivo.length()) {
-            long posicao = arquivo.getFilePointer();
+        long posicaoAtual = TAM_CABECALHO;
+        arquivo.seek(posicaoAtual);
+
+        while (posicaoAtual < arquivo.length()) {
+            if (arquivo.length() - posicaoAtual < 3) {
+                System.err.println("Registro corrompido na posição " + posicaoAtual + ". A operação será interrompida.");
+                return null;
+            }
             byte lapide = arquivo.readByte();
             short tamanho = arquivo.readShort();
-            byte[] dados = new byte[tamanho];
-            arquivo.read(dados);
+
+            if (tamanho < 0 || posicaoAtual + 3 + tamanho > arquivo.length()) {
+                System.err.println("Registro corrompido na posição " + posicaoAtual + ". A operação será interrompida.");
+                return null;
+            }
 
             if (lapide == ' ') {
+                byte[] dados = new byte[tamanho];
+                arquivo.readFully(dados);
                 T obj = construtor.newInstance();
                 obj.fromByteArray(dados);
                 if (obj.getId() == id) {
                     return obj;
                 }
+            } else {
+                arquivo.skipBytes(tamanho);
             }
+            // CORREÇÃO: Atualiza a posição para o próximo registro
+            posicaoAtual += 3 + tamanho;
         }
         return null;
     }
 
     public boolean delete(int id) throws Exception {
-        arquivo.seek(TAM_CABECALHO);
-        while (arquivo.getFilePointer() < arquivo.length()) {
-            long posicao = arquivo.getFilePointer();
+        long posicaoAtual = TAM_CABECALHO;
+        arquivo.seek(posicaoAtual);
+
+        while (posicaoAtual < arquivo.length()) {
+            if (arquivo.length() - posicaoAtual < 3) {
+                System.err.println("Registro corrompido na posição " + posicaoAtual + ". A operação será interrompida.");
+                return false;
+            }
             byte lapide = arquivo.readByte();
             short tamanho = arquivo.readShort();
-            byte[] dados = new byte[tamanho];
-            arquivo.read(dados);
+
+            if (tamanho < 0 || posicaoAtual + 3 + tamanho > arquivo.length()) {
+                System.err.println("Registro corrompido na posição " + posicaoAtual + ". A operação será interrompida.");
+                return false;
+            }
 
             if (lapide == ' ') {
+                byte[] dados = new byte[tamanho];
+                arquivo.readFully(dados);
                 T obj = construtor.newInstance();
                 obj.fromByteArray(dados);
                 if (obj.getId() == id) {
-                    arquivo.seek(posicao);
+                    arquivo.seek(posicaoAtual);
                     arquivo.writeByte('*');
-                    addDeleted(tamanho, posicao);
+                    addDeleted(tamanho, posicaoAtual);
                     return true;
                 }
+            } else {
+                arquivo.skipBytes(tamanho);
             }
+            // CORREÇÃO: Atualiza a posição para o próximo registro
+            posicaoAtual += 3 + tamanho;
         }
         return false;
     }
 
     public boolean update(T novoObj) throws Exception {
-        arquivo.seek(TAM_CABECALHO);
-        while (arquivo.getFilePointer() < arquivo.length()) {
-            long posicao = arquivo.getFilePointer();
+        long posicaoAtual = TAM_CABECALHO;
+        arquivo.seek(posicaoAtual);
+
+        while (posicaoAtual < arquivo.length()) {
+            if (arquivo.length() - posicaoAtual < 3) {
+                System.err.println("Registro corrompido na posição " + posicaoAtual + ". A operação será interrompida.");
+                return false;
+            }
             byte lapide = arquivo.readByte();
             short tamanho = arquivo.readShort();
-            byte[] dados = new byte[tamanho];
-            arquivo.read(dados);
+
+            if (tamanho < 0 || posicaoAtual + 3 + tamanho > arquivo.length()) {
+                System.err.println("Registro corrompido na posição " + posicaoAtual + ". A operação será interrompida.");
+                return false;
+            }
 
             if (lapide == ' ') {
+                byte[] dados = new byte[tamanho];
+                arquivo.readFully(dados);
                 T obj = construtor.newInstance();
                 obj.fromByteArray(dados);
                 if (obj.getId() == novoObj.getId()) {
@@ -111,12 +150,12 @@ public class Arquivo<T extends Registro> {
                     short novoTam = (short) novosDados.length;
 
                     if (novoTam <= tamanho) {
-                        arquivo.seek(posicao + 3);
+                        arquivo.seek(posicaoAtual + 3);
                         arquivo.write(novosDados);
                     } else {
-                        arquivo.seek(posicao);
+                        arquivo.seek(posicaoAtual);
                         arquivo.writeByte('*');
-                        addDeleted(tamanho, posicao);
+                        addDeleted(tamanho, posicaoAtual);
 
                         long novoEndereco = getDeleted(novosDados.length);
                         if (novoEndereco == -1) {
@@ -134,12 +173,18 @@ public class Arquivo<T extends Registro> {
                     }
                     return true;
                 }
+            } else {
+                arquivo.skipBytes(tamanho);
             }
+            // CORREÇÃO: Atualiza a posição para o próximo registro
+            posicaoAtual += 3 + tamanho;
         }
         return false;
     }
 
     private void addDeleted(int tamanhoEspaco, long enderecoEspaco) throws Exception {
+        // Lógica de lista de deletados - Esta lógica pode precisar de revisão futura
+        // mas não é a causa do bug atual.
         long posicao = 4;
         arquivo.seek(posicao);
         long endereco = arquivo.readLong();
@@ -182,6 +227,8 @@ public class Arquivo<T extends Registro> {
     }
 
     private long getDeleted(int tamanhoNecessario) throws Exception {
+        // Lógica de lista de deletados - Esta lógica pode precisar de revisão futura
+        // mas não é a causa do bug atual.
         long posicao = 4;
         arquivo.seek(posicao);
         long endereco = arquivo.readLong();
@@ -211,3 +258,4 @@ public class Arquivo<T extends Registro> {
         arquivo.close();
     }
 }
+

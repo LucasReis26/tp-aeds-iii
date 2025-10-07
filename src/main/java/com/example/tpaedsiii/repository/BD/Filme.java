@@ -85,10 +85,9 @@ public class Filme implements Registro {
     }
 
     public Filme() {
-    this.directors = new ArrayList<>();
-    this.actors = new ArrayList<>();
-}
-
+        this.directors = new ArrayList<>();
+        this.actors = new ArrayList<>();
+    }
 
     public Filme(int score, String title, LocalDate releaseDate, ArrayList<String> directors, ArrayList<String> actors,
             int rating, long duration) {
@@ -129,8 +128,8 @@ public class Filme implements Registro {
 
     }
 
-   public void writeStringArray(ArrayList<String> list, DataOutputStream dos) throws IOException {
-    dos.writeInt(list.size()); // número de elementos
+    public void writeStringArray(ArrayList<String> list, DataOutputStream dos) throws IOException {
+    dos.writeInt(list.size()); // escreve o número de elementos da lista
     for (String s : list) {
         byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
         dos.writeInt(bytes.length);
@@ -138,20 +137,20 @@ public class Filme implements Registro {
     }
 }
 
-
-    public ArrayList<String> readStringArray(ArrayList<String> list, DataInputStream dis) throws IOException {
-        int entityNum = dis.readInt();
-        for (int i = 0; i < entityNum; i++) {
-            int len = dis.readInt();
-            if (len < 0 || len > MAX_TAMANHO)
-                throw new IOException("Tamanho inválido: " + len);
-            byte[] bytes = new byte[len];
-            dis.readFully(bytes);
-            list.add(new String(bytes, StandardCharsets.UTF_8));
-        }
-
-        return list;
+public ArrayList<String> readStringArray(ArrayList<String> list, DataInputStream dis) throws IOException {
+    list.clear();
+    int entityNum = dis.readInt(); // lê o tamanho da lista corretamente
+    for (int i = 0; i < entityNum; i++) {
+        int len = dis.readInt();
+        if (len < 0 || len > MAX_TAMANHO)
+            throw new IOException("Tamanho inválido: " + len);
+        byte[] bytes = new byte[len];
+        dis.readFully(bytes);
+        list.add(new String(bytes, StandardCharsets.UTF_8));
     }
+    return list;
+}
+
 
     public String toString() {
         return "Filme {" +
