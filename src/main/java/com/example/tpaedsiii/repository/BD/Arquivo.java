@@ -1,7 +1,6 @@
 package com.example.tpaedsiii.repository.BD;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Constructor;
 
@@ -40,12 +39,12 @@ public class Arquivo<T extends Registro> {
         if (endereco == -1) {
             arquivo.seek(arquivo.length());
             endereco = arquivo.getFilePointer();
-            arquivo.writeByte(' '); // Lápide
+            arquivo.writeByte(' ');
             arquivo.writeShort(dados.length);
             arquivo.write(dados);
         } else {
             arquivo.seek(endereco);
-            arquivo.writeByte(' '); // Remove a lápide
+            arquivo.writeByte(' '); 
             arquivo.skipBytes(2);
             arquivo.write(dados);
         }
@@ -80,7 +79,6 @@ public class Arquivo<T extends Registro> {
             } else {
                 arquivo.skipBytes(tamanho);
             }
-            // CORREÇÃO: Atualiza a posição para o próximo registro
             posicaoAtual += 3 + tamanho;
         }
         return null;
@@ -117,7 +115,6 @@ public class Arquivo<T extends Registro> {
             } else {
                 arquivo.skipBytes(tamanho);
             }
-            // CORREÇÃO: Atualiza a posição para o próximo registro
             posicaoAtual += 3 + tamanho;
         }
         return false;
@@ -176,15 +173,12 @@ public class Arquivo<T extends Registro> {
             } else {
                 arquivo.skipBytes(tamanho);
             }
-            // CORREÇÃO: Atualiza a posição para o próximo registro
             posicaoAtual += 3 + tamanho;
         }
         return false;
     }
 
     private void addDeleted(int tamanhoEspaco, long enderecoEspaco) throws Exception {
-        // Lógica de lista de deletados - Esta lógica pode precisar de revisão futura
-        // mas não é a causa do bug atual.
         long posicao = 4;
         arquivo.seek(posicao);
         long endereco = arquivo.readLong();
@@ -227,8 +221,6 @@ public class Arquivo<T extends Registro> {
     }
 
     private long getDeleted(int tamanhoNecessario) throws Exception {
-        // Lógica de lista de deletados - Esta lógica pode precisar de revisão futura
-        // mas não é a causa do bug atual.
         long posicao = 4;
         arquivo.seek(posicao);
         long endereco = arquivo.readLong();
