@@ -1,6 +1,6 @@
-package com.example.tpaedsiii.repository.DAO;
-import com.example.tpaedsiii.repository.BD.Lista.Lista;
-import com.example.tpaedsiii.repository.BD.base.Arquivo;
+package com.example.tpaedsiii.repository.dao;
+import com.example.tpaedsiii.repository.bd.Lista.Lista;
+import com.example.tpaedsiii.repository.bd.base.Arquivo;
 
 public class ListaDAO {
     private final Arquivo<Lista> arqListas;

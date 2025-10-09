@@ -1,4 +1,4 @@
-package com.example.tpaedsiii.repository.BD;
+package com.example.tpaedsiii.repository.bd;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

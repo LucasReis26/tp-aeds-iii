@@ -1,11 +1,11 @@
-package com.example.tpaedsiii.repository.DAO;
+package com.example.tpaedsiii.repository.dao;
 
 import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-import com.example.tpaedsiii.repository.BD.Arquivo;
-import com.example.tpaedsiii.repository.BD.Filme;
+import com.example.tpaedsiii.repository.bd.Arquivo;
+import com.example.tpaedsiii.repository.bd.Filme;
 
 public class FilmeDAO {
     private final Arquivo<Filme> arqFilmes;

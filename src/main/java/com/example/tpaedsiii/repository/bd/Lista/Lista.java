@@ -1,7 +1,7 @@
-package com.example.tpaedsiii.repository.BD.Lista;
+package com.example.tpaedsiii.repository.bd.Lista;
 
-import com.example.tpaedsiii.repository.BD.Filme.Filme;
-import com.example.tpaedsiii.repository.BD.base.Registro;
+import com.example.tpaedsiii.repository.bd.Filme.Filme;
+import com.example.tpaedsiii.repository.bd.base.Registro;
 import com.fasterxml.jackson.core.io.DataOutputAsStream;
 
 import java.io.ByteArrayInputStream;

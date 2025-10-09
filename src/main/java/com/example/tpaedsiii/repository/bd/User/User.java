@@ -1,4 +1,4 @@
-package com.example.tpaedsiii.repository.BD.User;
+package com.example.tpaedsiii.repository.bd.User;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,7 +10,7 @@ import java.time.*;
 import java.util.ArrayList;
 
 
-import com.example.tpaedsiii.repository.BD.base.Registro;
+import com.example.tpaedsiii.repository.bd.base.Registro;
 
 public class User implements Registro{
     private int id;

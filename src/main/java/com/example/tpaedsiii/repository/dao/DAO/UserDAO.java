@@ -1,6 +1,6 @@
-package com.example.tpaedsiii.repository.DAO;
-import com.example.tpaedsiii.repository.BD.User.User;
-import com.example.tpaedsiii.repository.BD.base.Arquivo;
+package com.example.tpaedsiii.repository.dao;
+import com.example.tpaedsiii.repository.bd.User.User;
+import com.example.tpaedsiii.repository.bd.base.Arquivo;
 
 public class UserDAO {
     private final Arquivo<User> arqUsers;
