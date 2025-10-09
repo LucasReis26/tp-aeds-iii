@@ -29,6 +29,13 @@ public class ListaDAO {
     public boolean excluirLista(int id) throws Exception {
         return arqListas.delete(id);
     }
-
+    /*
+     * TODO: criaListaPadraoParaUsuario
+     * TODO: criarListaUsuario
+     * TODO: buscarListaPorNomeUsuario
+     * TODO: buscarListaPorNome
+     * TODO: adicionarFilmeEmLista
+     * 
+     */
 }
 
