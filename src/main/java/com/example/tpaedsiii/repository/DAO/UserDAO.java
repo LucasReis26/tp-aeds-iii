@@ -1,20 +1,9 @@
 package com.example.tpaedsiii.repository.DAO;
-import com.example.tpaedsiii.repository.BD.Arquivo;
-import com.example.tpaedsiii.repository.BD.User;
+import com.example.tpaedsiii.repository.BD.User.User;
+import com.example.tpaedsiii.repository.BD.base.Arquivo;
 
 public class UserDAO {
     private final Arquivo<User> arqUsers;
-
-    public static void main(String[] args) {
-        try {
-            UserDAO userDAO = new UserDAO();
-            User result = userDAO.buscarUser(2);
-            System.out.println(result.toString());
-            userDAO.excluirUser(3);
-        } catch (Exception e) {
-            // TODO: handle exception
-        }
-    }
 
     public UserDAO() throws Exception {
         arqUsers = new Arquivo<>("Users", User.class.getConstructor());
