@@ -1,5 +1,5 @@
 package com.example.tpaedsiii.repository.dao;
-import com.example.tpaedsiii.repository.bd.User.User;
+import com.example.tpaedsiii.repository.bd.user.User;
 import com.example.tpaedsiii.repository.bd.base.Arquivo;
 
 public class UserDAO {

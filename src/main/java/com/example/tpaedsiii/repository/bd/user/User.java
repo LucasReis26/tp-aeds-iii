@@ -1,15 +1,10 @@
-package com.example.tpaedsiii.repository.bd.User;
+package com.example.tpaedsiii.repository.bd.user;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.*;
-import java.util.ArrayList;
-
-
 import com.example.tpaedsiii.repository.bd.base.Registro;
 
 public class User implements Registro{

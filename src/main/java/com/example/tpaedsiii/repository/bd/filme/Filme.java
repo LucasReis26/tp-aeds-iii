@@ -1,4 +1,5 @@
-package com.example.tpaedsiii.repository.bd;
+package com.example.tpaedsiii.repository.bd.filme;
+import com.example.tpaedsiii.repository.bd.base.Registro;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
