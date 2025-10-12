@@ -8,7 +8,7 @@ import com.example.tpaedsiii.repository.dao.FilmeDAO;
 @SpringBootApplication
 public class TpAedsIiiApplication {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		 System.out.println("-> Iniciando o programa (versão sem Spring)...");
 
         FilmeDAO filmeDAO = new FilmeDAO();
