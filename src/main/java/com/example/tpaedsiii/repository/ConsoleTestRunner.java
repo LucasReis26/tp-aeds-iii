@@ -127,28 +127,276 @@ public class ConsoleTestRunner {
         System.out.println("0. Sair");
     }
 
-    // --- MÉTODOS DE TESTE MANUAIS COMPLETOS ---
+    private static void criarUser() {
+        try {
+            System.out.print("Username: ");
+            String username = scanner.nextLine();
+            System.out.print("Descrição: ");
+            String desc = scanner.nextLine();
+            System.out.print("Senha: ");
+            String pass = scanner.nextLine();
+            User user = new User(0, username, desc, pass);
+            int novoId = userDAO.incluirUser(user);
+            System.out.println("SUCESSO: User criado com ID " + novoId + ": " + user);
+        } catch (Exception e) {
+            System.err.println("ERRO ao criar user: " + e.getMessage());
+        }
+    }
+
+    private static void buscarUserPorId() {
+        try {
+            System.out.print("ID do User a buscar: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            User user = userDAO.buscarUser(id);
+            if (user != null) System.out.println("User encontrado: " + user);
+            else System.out.println("User com ID " + id + " não encontrado.");
+        } catch (Exception e) {
+            System.err.println("ERRO ao buscar user: " + e.getMessage());
+        }
+    }
     
-    private static void criarUser() { /* ... Código das respostas anteriores ... */ }
-    private static void buscarUserPorId() { /* ... Código das respostas anteriores ... */ }
-    private static void alterarUser() { /* ... Código das respostas anteriores ... */ }
-    private static void excluirUser() { /* ... Código das respostas anteriores ... */ }
-    private static void criarFilme() { /* ... Código das respostas anteriores ... */ }
-    private static void buscarFilmePorId() { /* ... Código das respostas anteriores ... */ }
-    private static void alterarFilme() { /* ... Código das respostas anteriores ... */ }
-    private static void excluirFilme() { /* ... Código das respostas anteriores ... */ }
-    private static void criarReview() { /* ... Código das respostas anteriores ... */ }
-    private static void buscarReviewPorId() { /* ... Código das respostas anteriores ... */ }
-    private static void excluirReview() { /* ... Código das respostas anteriores ... */ }
-    private static void buscarReviewsPorUsuario() { /* ... Código das respostas anteriores ... */ }
-    private static void buscarReviewsPorFilme() { /* ... Código das respostas anteriores ... */ }
-    private static void criarListaPersonalizada() { /* ... Código das respostas anteriores ... */ }
-    private static void adicionarFilmeNaLista() { /* ... Código das respostas anteriores ... */ }
-    private static void verListasCompletasDoUsuario() { /* ... Código das respostas anteriores ... */ }
-    private static void excluirLista() { /* ... Código das respostas anteriores ... */ }
+    private static void alterarUser() {
+        try {
+            System.out.print("ID do User a ser alterado: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            User user = userDAO.buscarUser(id);
+            if (user == null) {
+                System.out.println("User com ID " + id + " não encontrado.");
+                return;
+            }
+            System.out.println("Dados atuais: " + user);
+            System.out.print("Novo nome de usuário (deixe em branco para não alterar): ");
+            String novoUsername = scanner.nextLine();
+            if (!novoUsername.isEmpty()) user.setUsername(novoUsername);
+            
+            userDAO.alterarUser(user);
+            System.out.println("SUCESSO: User alterado: " + user);
+        } catch (Exception e) {
+            System.err.println("ERRO ao alterar user: " + e.getMessage());
+        }
+    }
 
+    private static void excluirUser() {
+        try {
+            System.out.print("ID do User a ser excluído: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            if (userDAO.excluirUser(id)) {
+                System.out.println("SUCESSO: User com ID " + id + " foi excluído.");
+            } else {
+                System.out.println("FALHA: User com ID " + id + " não encontrado.");
+            }
+        } catch (Exception e) {
+            System.err.println("ERRO ao excluir user: " + e.getMessage());
+        }
+    }
 
-    // --- MÉTODO DE TESTE AUTOMÁTICO COMPLETO E DETALHADO ---
+    private static void criarFilme() {
+        try {
+            Filme filme = new Filme();
+            System.out.print("Título: ");
+            filme.setTitle(scanner.nextLine());
+            System.out.print("Data de Lançamento (AAAA-MM-DD): ");
+            filme.setReleaseDate(LocalDate.parse(scanner.nextLine()));
+            System.out.print("Score (0-100): ");
+            filme.setScore(Integer.parseInt(scanner.nextLine()));
+            int novoId = filmeDAO.incluirFilme(filme);
+            System.out.println("SUCESSO: Filme criado com ID " + novoId + ": " + filme);
+        } catch (Exception e) {
+            System.err.println("ERRO ao criar filme: " + e.getMessage());
+        }
+    }
+
+    private static void buscarFilmePorId() {
+        try {
+            System.out.print("ID do Filme a buscar: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            Filme filme = filmeDAO.buscarFilme(id);
+            if (filme != null) System.out.println("Filme encontrado: " + filme);
+            else System.out.println("Filme com ID " + id + " não encontrado.");
+        } catch (Exception e) {
+            System.err.println("ERRO ao buscar filme: " + e.getMessage());
+        }
+    }
+
+    private static void alterarFilme() {
+        try {
+            System.out.print("ID do Filme a ser alterado: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            Filme filme = filmeDAO.buscarFilme(id);
+            if (filme == null) {
+                System.out.println("Filme com ID " + id + " não encontrado.");
+                return;
+            }
+            System.out.println("Dados atuais: " + filme);
+            System.out.print("Novo título (deixe em branco para não alterar): ");
+            String novoTitulo = scanner.nextLine();
+            if (!novoTitulo.isEmpty()) filme.setTitle(novoTitulo);
+
+            filmeDAO.alterarFilme(filme);
+            System.out.println("SUCESSO: Filme alterado: " + filme);
+        } catch (Exception e) {
+            System.err.println("ERRO ao alterar filme: " + e.getMessage());
+        }
+    }
+
+    private static void excluirFilme() {
+        try {
+            System.out.print("ID do Filme a ser excluído: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            if (filmeDAO.excluirFilme(id)) {
+                System.out.println("SUCESSO: Filme com ID " + id + " foi excluído.");
+            } else {
+                System.out.println("FALHA: Filme com ID " + id + " não encontrado.");
+            }
+        } catch (Exception e) {
+            System.err.println("ERRO ao excluir filme: " + e.getMessage());
+        }
+    }
+    
+    private static void criarReview() {
+        try {
+            Review review = new Review();
+            System.out.print("ID do Usuário que está avaliando: ");
+            review.setUserId(Integer.parseInt(scanner.nextLine()));
+            System.out.print("ID do Filme a ser avaliado: ");
+            review.setFilmeId(Integer.parseInt(scanner.nextLine()));
+            System.out.print("Nota (0.0 a 10.0): ");
+            review.setNota(Float.parseFloat(scanner.nextLine()));
+            System.out.print("Comentário: ");
+            review.setComentario(scanner.nextLine());
+            review.setData(new Date());
+            int novoId = reviewDAO.create(review);
+            System.out.println("SUCESSO: Review criada com ID " + novoId + ": " + review);
+        } catch (Exception e) {
+            System.err.println("ERRO ao criar review: " + e.getMessage());
+        }
+    }
+    
+    private static void buscarReviewPorId() {
+         try {
+            System.out.print("ID da Review a buscar: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            Review review = reviewDAO.read(id);
+            if (review != null) System.out.println("Review encontrada: " + review);
+            else System.out.println("Review com ID " + id + " não encontrada.");
+        } catch (Exception e) {
+            System.err.println("ERRO ao buscar review: " + e.getMessage());
+        }
+    }
+
+    private static void buscarReviewsPorUsuario() {
+        try {
+            System.out.print("ID do Usuário para buscar as reviews: ");
+            int userId = Integer.parseInt(scanner.nextLine());
+            List<Review> reviews = reviewDAO.buscarAvaliacoesPorUsuario(userId);
+            if (reviews.isEmpty()) {
+                System.out.println("Nenhuma review encontrada para o usuário com ID " + userId);
+            } else {
+                System.out.println("Reviews encontradas para o usuário " + userId + ":");
+                reviews.forEach(r -> System.out.println(" - " + r));
+            }
+        } catch (Exception e) {
+            System.err.println("ERRO ao buscar reviews: " + e.getMessage());
+        }
+    }
+
+    private static void buscarReviewsPorFilme() {
+        try {
+            System.out.print("ID do Filme para buscar as reviews: ");
+            int filmeId = Integer.parseInt(scanner.nextLine());
+            List<Review> reviews = reviewDAO.buscarAvaliacoesPorFilme(filmeId);
+            if (reviews.isEmpty()) {
+                System.out.println("Nenhuma review encontrada para o filme com ID " + filmeId);
+            } else {
+                System.out.println("Reviews encontradas para o filme " + filmeId + ":");
+                reviews.forEach(r -> System.out.println(" - " + r));
+            }
+        } catch (Exception e) {
+            System.err.println("ERRO ao buscar reviews: " + e.getMessage());
+        }
+    }
+    
+    private static void excluirReview() {
+        try {
+            System.out.print("ID da Review a ser excluída: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            if (reviewDAO.delete(id)) {
+                System.out.println("SUCESSO: Review com ID " + id + " foi excluída.");
+            } else {
+                System.out.println("FALHA: Review com ID " + id + " não encontrada.");
+            }
+        } catch (Exception e) {
+            System.err.println("ERRO ao excluir review: " + e.getMessage());
+        }
+    }
+    
+    private static void criarListaPersonalizada() {
+        try {
+            System.out.print("ID do Usuário que vai criar a lista: ");
+            int userId = Integer.parseInt(scanner.nextLine());
+            System.out.print("Nome da nova lista: ");
+            String nome = scanner.nextLine();
+            Lista lista = new Lista(0, userId, nome, false);
+            int novoId = listaDAO.incluirLista(lista);
+            System.out.println("SUCESSO: Lista personalizada '" + nome + "' criada com ID " + novoId);
+        } catch (Exception e) {
+            System.err.println("ERRO ao criar lista: " + e.getMessage());
+        }
+    }
+    
+    private static void adicionarFilmeNaLista() {
+        try {
+            System.out.print("ID da Lista onde o filme será adicionado: ");
+            int listaId = Integer.parseInt(scanner.nextLine());
+            System.out.print("ID do Filme a ser adicionado: ");
+            int filmeId = Integer.parseInt(scanner.nextLine());
+            listaDAO.adicionarFilmeEmLista(listaId, filmeId);
+            System.out.println("SUCESSO: Filme " + filmeId + " adicionado à lista " + listaId);
+        } catch (Exception e) {
+            System.err.println("ERRO ao adicionar filme na lista: " + e.getMessage());
+        }
+    }
+    
+    private static void verListasCompletasDoUsuario() {
+        try {
+            System.out.print("ID do Usuário para ver as listas: ");
+            int userId = Integer.parseInt(scanner.nextLine());
+            List<Lista> listas = listaDAO.buscarListasPorUsuario(userId, filmeDAO);
+            if (listas.isEmpty()) {
+                System.out.println("Nenhuma lista encontrada para o usuário " + userId);
+            } else {
+                System.out.println("--- Listas do Usuário " + userId + " ---");
+                for (Lista lista : listas) {
+                    System.out.println("\nLISTA: " + lista.getNome() + " (ID: " + lista.getId() + ", Padrão: " + lista.isPadrao() + ")");
+                    if (lista.getFilmes().isEmpty()) {
+                        System.out.println("  (Esta lista está vazia)");
+                    } else {
+                        System.out.println("  Filmes nesta lista:");
+                        for (Filme filme : lista.getFilmes()) {
+                            System.out.println("    - " + filme.getTitle() + " (ID: " + filme.getId() + ")");
+                        }
+                    }
+                }
+                System.out.println("--------------------------");
+            }
+        } catch (Exception e) {
+            System.err.println("ERRO ao buscar listas do usuário: " + e.getMessage());
+        }
+    }
+    
+    private static void excluirLista() {
+        try {
+            System.out.print("ID da Lista a ser excluída: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            if (listaDAO.excluirLista(id)) {
+                System.out.println("SUCESSO: Lista com ID " + id + " foi excluída.");
+            } else {
+                System.out.println("FALHA: Lista com ID " + id + " não encontrada.");
+            }
+        } catch (Exception e) {
+            System.err.println("ERRO ao excluir lista: " + e.getMessage());
+        }
+    }
     
     private static void runAutomaticTests() {
         System.out.println("\n\n--- INICIANDO BATERIA DE TESTES AUTOMÁTICOS ---");
@@ -160,12 +408,11 @@ public class ConsoleTestRunner {
             if (!initializeDAOs()) throw new Exception("Falha ao reinicializar DAOs.");
             System.out.println("-> Ambiente limpo e DAOs reinicializados.");
 
-            // --- CRIAÇÃO E LEITURA ---
+            // --- ETAPA 1: TESTANDO CREATE & READ ---
             System.out.println("\n-- ETAPA 1: TESTANDO CRIAÇÃO E LEITURA (CREATE & READ) --");
             User alice = new User(0, "alice", "Gosta de drama", "123");
-            System.out.println("[AÇÃO] Criando User: " + alice);
-            int aliceId = userDAO.incluirUser(alice);
-            alice.setId(aliceId);
+            System.out.println("[AÇÃO] Criando User: " + alice.getUsername());
+            int aliceId = userDAO.incluirUser(alice); alice.setId(aliceId);
             System.out.println(" -> ID gerado: " + aliceId);
             User aliceLida = userDAO.buscarUser(aliceId);
             System.out.println("[VERIFICAÇÃO] Buscando User pelo ID " + aliceId + " -> Encontrado: " + aliceLida);
@@ -174,15 +421,14 @@ public class ConsoleTestRunner {
 
             Filme inception = new Filme(); inception.setTitle("A Origem"); inception.setReleaseDate(LocalDate.parse("2010-07-16"));
             System.out.println("[AÇÃO] Criando Filme: " + inception.getTitle());
-            int inceptionId = filmeDAO.incluirFilme(inception);
-            inception.setId(inceptionId);
+            int inceptionId = filmeDAO.incluirFilme(inception); inception.setId(inceptionId);
             System.out.println(" -> ID gerado: " + inceptionId);
             Filme inceptionLido = filmeDAO.buscarFilme(inceptionId);
             System.out.println("[VERIFICAÇÃO] Buscando Filme pelo ID " + inceptionId + " -> Encontrado: " + inceptionLido);
             if (inceptionLido != null && inceptionLido.getId() == inceptionId) { System.out.println("  -> PASSOU"); }
             else { System.out.println("  -> FALHOU"); allTestsPassed = false; }
             
-            // --- ATUALIZAÇÃO ---
+            // --- ETAPA 2: TESTANDO UPDATE ---
             System.out.println("\n-- ETAPA 2: TESTANDO ATUALIZAÇÃO (UPDATE) --");
             System.out.println("[AÇÃO] Alterando username de Alice para 'alice_v2'");
             alice.setUsername("alice_v2");
@@ -192,7 +438,7 @@ public class ConsoleTestRunner {
             if (aliceAtualizada != null && aliceAtualizada.getUsername().equals("alice_v2")) { System.out.println("  -> PASSOU"); }
             else { System.out.println("  -> FALHOU"); allTestsPassed = false; }
 
-            // --- CRIAÇÃO DE RELAÇÕES ---
+            // --- ETAPA 3: TESTANDO CRIAÇÃO DE RELAÇÕES ---
             System.out.println("\n-- ETAPA 3: TESTANDO CRIAÇÃO DE RELAÇÕES (1-N & N-N) --");
             System.out.println("[AÇÃO] Criando listas padrão para 'alice' (ID: " + aliceId + ")");
             listaDAO.criarListasPadraoParaUsuario(aliceId, filmeDAO);
@@ -212,13 +458,13 @@ public class ConsoleTestRunner {
             int reviewAliceId = reviewDAO.create(reviewAlice);
             System.out.println(" -> ID da Review gerado: " + reviewAliceId);
 
-            // --- VERIFICAÇÃO DE RELAÇÕES ---
+            // --- ETAPA 4: VERIFICANDO BUSCAS POR RELAÇÕES ---
             System.out.println("\n-- ETAPA 4: VERIFICANDO BUSCAS POR RELAÇÕES --");
             System.out.println("[VERIFICAÇÃO] Buscando a lista 'Favoritos' de 'alice' com seus filmes...");
             Lista favoritosVerificada = listaDAO.buscarListaCompleta(favoritosDaAlice.getId(), filmeDAO);
             System.out.println(" -> Lista encontrada: " + favoritosVerificada);
-            System.out.println(" -> Filmes dentro da lista: " + favoritosVerificada.getFilmes().size());
-            if (favoritosVerificada.getFilmes().size() == 1 && favoritosVerificada.getFilmes().get(0).getId() == inceptionId) { System.out.println("  -> PASSOU"); }
+            System.out.println(" -> Filmes dentro da lista: " + (favoritosVerificada.getFilmes() != null ? favoritosVerificada.getFilmes().size() : 0));
+            if (favoritosVerificada.getFilmes() != null && favoritosVerificada.getFilmes().size() == 1 && favoritosVerificada.getFilmes().get(0).getId() == inceptionId) { System.out.println("  -> PASSOU"); }
             else { System.out.println("  -> FALHOU"); allTestsPassed = false; }
             
             System.out.println("[VERIFICAÇÃO] Buscando reviews do usuário 'alice' (ID: " + aliceId + ")...");
@@ -227,7 +473,7 @@ public class ConsoleTestRunner {
             if (reviewsDaAlice.size() == 1 && reviewsDaAlice.get(0).getId() == reviewAliceId) { System.out.println("  -> PASSOU"); }
             else { System.out.println("  -> FALHOU"); allTestsPassed = false; }
 
-            // --- EXCLUSÃO ---
+            // --- ETAPA 5: TESTANDO EXCLUSÃO (DELETE) ---
             System.out.println("\n-- ETAPA 5: TESTANDO EXCLUSÃO (DELETE) --");
             System.out.println("[AÇÃO] Deletando a Review com ID " + reviewAliceId + "...");
             boolean reviewDeleted = reviewDAO.delete(reviewAliceId);
@@ -243,11 +489,10 @@ public class ConsoleTestRunner {
             if (filmeDeleted && filmeAposDelete == null) { System.out.println("  -> PASSOU"); }
             else { System.out.println("  -> FALHOU"); allTestsPassed = false; }
             
-            // Verificação final da lista, que agora deve estar vazia
             Lista favoritosFinal = listaDAO.buscarListaCompleta(favoritosDaAlice.getId(), filmeDAO);
-            System.out.println("[VERIFICAÇÃO FINAL] Buscando lista 'Favoritos' novamente. Filmes encontrados: " + favoritosFinal.getFilmes().size());
-            if (favoritosFinal.getFilmes().isEmpty()) { System.out.println("  -> PASSOU (Filme removido da lista implicitamente após exclusão)"); }
-            else { System.out.println("  -> FALHOU (Filme ainda consta na lista)"); allTestsPassed = false; }
+            System.out.println("[VERIFICAÇÃO FINAL] Buscando lista 'Favoritos' novamente. Filmes encontrados: " + (favoritosFinal.getFilmes() != null ? favoritosFinal.getFilmes().size() : 0));
+            if (favoritosFinal.getFilmes() != null && favoritosFinal.getFilmes().isEmpty()) { System.out.println("  -> PASSOU (Filme não é mais encontrado na lista após exclusão)"); }
+            else { System.out.println("  -> FALHOU (Filme ainda consta na lista ou a lista é nula)"); allTestsPassed = false; }
 
         } catch (Exception e) {
             System.err.println("\n--- UM ERRO INESPERADO OCORREU DURANTE OS TESTES ---");
