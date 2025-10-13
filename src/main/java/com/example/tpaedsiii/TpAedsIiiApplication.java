@@ -3,13 +3,13 @@ package com.example.tpaedsiii;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import com.example.tpaedsiii.repository.dao.FilmeDAO;
+import com.example.tpaedsiii.repository.dao.filme.FilmeDAO;
 
 @SpringBootApplication
 public class TpAedsIiiApplication {
 
 	public static void main(String[] args) throws Exception {
-		 System.out.println("-> Iniciando o programa (versão sem Spring)...");
+        System.out.println("-> Iniciando o programa (versão sem Spring)...");
 
         FilmeDAO filmeDAO = new FilmeDAO();
         System.out.println("-> Objeto FilmeDAO criado.");

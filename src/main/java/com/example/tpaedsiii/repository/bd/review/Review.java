@@ -1,6 +1,7 @@
 package com.example.tpaedsiii.repository.bd.review;
 
 import com.example.tpaedsiii.repository.bd.base.Registro;
+import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash; // IMPORTAÇÃO NECESSÁRIA
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -8,18 +9,16 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Date;
 
-/**
- * Representa a relação N-N entre um Usuário e um Filme, armazenando a avaliação.
- * Cada instância desta classe é um registro único de avaliação.
- */
-public class Review implements Registro {
+public class Review implements Registro, RegistroHash<Review> {
 
-    private int id;        
-    private int userId;     
-    private int filmeId;   
-    private float nota;      
-    private String comentario; 
-    private Date data;       
+    private int id;
+    private int userId;
+    private int filmeId;
+    private float nota;
+    private String comentario;
+    private Date data;
+    
+    private static final int TAMANHO_FIXO_HASH = 256;
 
     public Review() {
         this.id = -1;
@@ -30,9 +29,6 @@ public class Review implements Registro {
         this.data = new Date();
     }
 
-    /**
-     * Construtor completo para criar uma nova avaliação.
-     */
     public Review(int id, int userId, int filmeId, float nota, String comentario, Date data) {
         this.id = id;
         this.userId = userId;
@@ -50,15 +46,22 @@ public class Review implements Registro {
     public void setFilmeId(int filmeId) { this.filmeId = filmeId; }
     public float getNota() { return nota; }
     public void setNota(float nota) { this.nota = nota; }
-
-
-
     public String getComentario() { return comentario; }
     public void setComentario(String comentario) { this.comentario = comentario; }
-
     public Date getData() { return data; }
     public void setData(Date data) { this.data = data; }
 
+    @Override
+    public int hashCode() {
+        return this.id; 
+    }
+
+    @Override
+    public int size() {
+        return TAMANHO_FIXO_HASH; 
+    }
+
+    @Override
     public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -68,9 +71,17 @@ public class Review implements Registro {
         dos.writeFloat(this.nota);
         dos.writeUTF(this.comentario);
         dos.writeLong(this.data.getTime());
-        return baos.toByteArray();
+
+        byte[] dadosVariaveis = baos.toByteArray();
+        if (dadosVariaveis.length > TAMANHO_FIXO_HASH) {
+             throw new IOException("Tamanho da review (" + dadosVariaveis.length + ") excede o buffer fixo de " + TAMANHO_FIXO_HASH + " bytes.");
+        }
+        byte[] bufferFixo = new byte[TAMANHO_FIXO_HASH];
+        System.arraycopy(dadosVariaveis, 0, bufferFixo, 0, dadosVariaveis.length);
+        return bufferFixo;
     }
 
+    @Override
     public void fromByteArray(byte[] b) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(b);
         DataInputStream dis = new DataInputStream(bais);
@@ -82,8 +93,9 @@ public class Review implements Registro {
         this.data = new Date(dis.readLong());
     }
     
+    @Override
     public String toString() {
-        return "Avaliacao [id=" + id + ", userId=" + userId + ", filmeId=" + filmeId + 
+        return "Review [id=" + id + ", userId=" + userId + ", filmeId=" + filmeId + 
                ", nota=" + nota + ", comentario='" + comentario + "', data=" + data + "]";
     }
 }

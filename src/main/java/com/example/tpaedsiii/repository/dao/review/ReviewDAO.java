@@ -1,42 +1,73 @@
 package com.example.tpaedsiii.repository.dao.review;
 
 import com.example.tpaedsiii.repository.bd.review.Review;
-import com.example.tpaedsiii.repository.bd.base.Arquivo;
+import com.example.tpaedsiii.repository.bd.indexes.base.HashExtensivel;
+import com.example.tpaedsiii.repository.bd.indexes.ParUsuarioReview;
+import com.example.tpaedsiii.repository.bd.indexes.ParFilmeReview;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ReviewDAO {
-
-    private final Arquivo<Review> arqAvaliacoes;
+    private final HashExtensivel<Review> hashReviews;
+    private final HashExtensivel<ParUsuarioReview> idxUsuarioReview;
+    private final HashExtensivel<ParFilmeReview> idxFilmeReview;
 
     public ReviewDAO() throws Exception {
-        arqAvaliacoes = new Arquivo<>("Avaliacoes", Review.class.getConstructor());
+        hashReviews = new HashExtensivel<>(Review.class.getConstructor(), 4, "data/reviews_d.db", "./data/reviews_c.db");
+        idxUsuarioReview = new HashExtensivel<>(ParUsuarioReview.class.getConstructor(), 10, "./data/idx_user_rev_d.db", "./data/idx_user_rev_c.db");
+        idxFilmeReview = new HashExtensivel<>(ParFilmeReview.class.getConstructor(), 10, "./data/idx_film_rev_d.db", "./data/idx_film_rev_c.db");
     }
 
-    public int create(Review Review) throws Exception {
-        return arqAvaliacoes.create(Review);
+    public int create(Review review) throws Exception {
+        hashReviews.create(review);
+        idxUsuarioReview.create(new ParUsuarioReview(review.getUserId(), review.getId()));
+        idxFilmeReview.create(new ParFilmeReview(review.getFilmeId(), review.getId()));
+        return review.getId();
     }
 
     public Review read(int id) throws Exception {
-        return arqAvaliacoes.read(id);
+        return hashReviews.read(id);
     }
-    
-    public boolean update(Review Review) throws Exception {
-        return arqAvaliacoes.update(Review);
+
+    public boolean update(Review review) throws Exception {
+        return hashReviews.update(review);
     }
 
     public boolean delete(int id) throws Exception {
-        return arqAvaliacoes.delete(id);
+        return hashReviews.delete(id);
     }
-    /*Todos os metodos abaixo precisam de indice
-     TODO: public ArrayList<Review> buscarAvaliacoesPorUsuario(int userId) throws Exception {
- 
-     }
 
-     TODO: public ArrayList<Review> buscarAvaliacoesPorFilme(int filmeId) throws Exception {
-    
-     }
+    public List<Review> buscarAvaliacoesPorUsuario(int userId) throws Exception {
+        List<ParUsuarioReview> pares = idxUsuarioReview.readAll(userId);
+        List<Review> reviews = new ArrayList<>();
+        for (ParUsuarioReview par : pares) {
+            Review r = hashReviews.read(par.getReviewId());
+            if (r != null) {
+                reviews.add(r);
+            }
+        }
+        return reviews;
+    }
 
-    TODO: public Review buscarReviewUnica(int userId, int filmeId) throws Exception {
-    
-    */ 
+    public List<Review> buscarAvaliacoesPorFilme(int filmeId) throws Exception {
+        List<ParFilmeReview> pares = idxFilmeReview.readAll(filmeId);
+        List<Review> reviews = new ArrayList<>();
+        for (ParFilmeReview par : pares) {
+            Review r = hashReviews.read(par.getReviewId());
+            if (r != null) {
+                reviews.add(r);
+            }
+        }
+        return reviews;
+    }
+
+    public Review buscarReviewUnica(int userId, int filmeId) throws Exception {
+        List<Review> reviewsDoFilme = buscarAvaliacoesPorFilme(filmeId);
+        for (Review r : reviewsDoFilme) {
+            if (r.getUserId() == userId) {
+                return r;
+            }
+        }
+        return null;
+    }
 }

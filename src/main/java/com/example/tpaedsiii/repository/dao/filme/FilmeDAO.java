@@ -1,33 +1,32 @@
-package com.example.tpaedsiii.repository.dao;
+package com.example.tpaedsiii.repository.dao.filme;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-
-import com.example.tpaedsiii.repository.bd.base.Arquivo;
 import com.example.tpaedsiii.repository.bd.filme.Filme;
+import com.example.tpaedsiii.repository.bd.indexes.base.HashExtensivel;
 
 public class FilmeDAO {
-    private final Arquivo<Filme> arqFilmes;
+    private final HashExtensivel<Filme> hashFilmes;
 
     public FilmeDAO() throws Exception {
-        arqFilmes = new Arquivo<>("filmes", Filme.class.getConstructor());
+        hashFilmes = new HashExtensivel<>(Filme.class.getConstructor(), 4, "data/filmes_d.db", "./data/filmes_c.db");
     }
 
     public int incluirFilme(Filme filme) throws Exception {
-        return arqFilmes.create(filme);
+        if (hashFilmes.read(filme.getId()) != null) {
+            throw new Exception("Filme com ID " + filme.getId() + " já existe.");
+        }
+        hashFilmes.create(filme);
+        return filme.getId();
     }
 
     public Filme buscarFilme(int id) throws Exception {
-        return arqFilmes.read(id);
+        return hashFilmes.read(id);
     }
 
     public boolean alterarFilme(Filme filme) throws Exception {
-        return arqFilmes.update(filme);
+        return hashFilmes.update(filme);
     }
 
     public boolean excluirFilme(int id) throws Exception {
-        return arqFilmes.delete(id);
+        return hashFilmes.delete(id);
     }
-
 }
-

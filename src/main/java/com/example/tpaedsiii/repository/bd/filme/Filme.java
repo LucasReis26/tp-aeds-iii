@@ -1,5 +1,6 @@
 package com.example.tpaedsiii.repository.bd.filme;
 import com.example.tpaedsiii.repository.bd.base.Registro;
+import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,8 +11,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.ArrayList;
 
-public class Filme implements Registro {
+public class Filme implements Registro, RegistroHash<Filme> {
     final int MAX_TAMANHO = 10_000_000;
+    private static final int TAMANHO_FIXO_HASH = 256;
     private int id;
     private int score;
     private String title;
@@ -164,6 +166,14 @@ public ArrayList<String> readStringArray(ArrayList<String> list, DataInputStream
                 ", actors=" + actors +
                 ", rating=" + rating +
                 '}';
+    }
+
+    public int hashCode() {
+        return this.id;
+    }
+
+    public int size() {
+        return TAMANHO_FIXO_HASH;
     }
 
 }

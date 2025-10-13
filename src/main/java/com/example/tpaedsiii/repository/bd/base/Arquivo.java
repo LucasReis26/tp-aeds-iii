@@ -3,6 +3,7 @@ package com.example.tpaedsiii.repository.bd.base;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 
 public class Arquivo<T extends Registro> {
     private static final int TAM_CABECALHO = 12; // 4 bytes (ID) + 8 bytes (lista deletados)
@@ -10,22 +11,25 @@ public class Arquivo<T extends Registro> {
     private String nomeArquivo;
     private Constructor<T> construtor;
 
-    public Arquivo(String nomeArquivo, Constructor<T> construtor) throws Exception {
+  public Arquivo(String nomeArquivoCompleto, Constructor<T> construtor) throws Exception {
+        this.nomeArquivo = nomeArquivoCompleto;
+        this.construtor = construtor;
 
-        File diretorio = new File("./src/main/java/com/example/tpaedsiii/repository/BD/data/filmes");
-        if (!diretorio.exists()) {
-            diretorio.mkdirs();
+        File file = new File(this.nomeArquivo);
+        if (file.getParentFile() != null) {
+            file.getParentFile().mkdirs();
         }
 
-        this.nomeArquivo = diretorio.getPath() + "/" + nomeArquivo + ".db";
-
-        this.construtor = construtor;
         this.arquivo = new RandomAccessFile(this.nomeArquivo, "rw");
 
         if (arquivo.length() == 0) {
             arquivo.writeInt(0);
             arquivo.writeLong(-1);
         }
+    }
+
+    public String getNomeArquivo() {
+        return this.nomeArquivo;
     }
 
     public int create(T obj) throws Exception {
@@ -246,6 +250,29 @@ public class Arquivo<T extends Registro> {
         return -1;
     }
 
+     public ArrayList<T> readAll() throws Exception {
+        ArrayList<T> resultados = new ArrayList<>();
+        long posicaoAtual = TAM_CABECALHO;
+        arquivo.seek(posicaoAtual);
+        while (posicaoAtual < arquivo.length()) {
+            if (arquivo.length() - posicaoAtual < 3) break;
+            byte lapide = arquivo.readByte();
+            short tamanho = arquivo.readShort();
+            if (tamanho <= 0 || posicaoAtual + 3 + tamanho > arquivo.length()) break;
+            if (lapide == ' ') {
+                byte[] dados = new byte[tamanho];
+                arquivo.readFully(dados);
+                T obj = construtor.newInstance();
+                obj.fromByteArray(dados);
+                resultados.add(obj);
+            } else {
+                arquivo.skipBytes(tamanho);
+            }
+            posicaoAtual += 3 + tamanho;
+        }
+        return resultados;
+    }
+    
     public void close() throws Exception {
         arquivo.close();
     }
