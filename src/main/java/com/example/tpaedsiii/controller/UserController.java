@@ -74,20 +74,15 @@ public class UserController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado para atualização"),
             @ApiResponse(responseCode = "409", description = "Nome de usuário já existe")
     })
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable int id, @RequestBody User user) {
-        try {
-            User atualizado = userService.alterarUsuario(id, user.getUsername(), user.getDescription());
-            return ResponseEntity.ok(atualizado);
-        } catch (Exception e) {
-            String msg = e.getMessage();
-            if (msg.contains("não encontrado")) {
-                return ResponseEntity.notFound().build();
-            } else if (msg.contains("já existe")) {
-                return ResponseEntity.status(409).body(msg);
-            }
-            return ResponseEntity.internalServerError().body(msg);
-        }
+
+    @PutMapping("/{id}") 
+public ResponseEntity<?> updateUser(@PathVariable int id, @RequestBody User userData) {
+    try {
+        User updatedUser = userService.alterarUsuario(id, userData.getUsername(), userData.getDescription());
+        return ResponseEntity.ok(updatedUser);
+    } catch (Exception e) {
+        return ResponseEntity.notFound().build();
     }
+}
 
 }

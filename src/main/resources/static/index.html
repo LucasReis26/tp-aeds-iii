@@ -23,6 +23,7 @@
 
     <div class="grid-container">
 
+        <!-- Coluna de Usuários -->
         <div class="entity-column">
             <h2>Usuários</h2>
             <div class="operation">
@@ -44,6 +45,7 @@
             </div>
         </div>
 
+        <!-- Coluna de Filmes -->
         <div class="entity-column">
             <h2>Filmes</h2>
             <div class="operation">
@@ -67,6 +69,7 @@
             </div>
         </div>
 
+        <!-- Coluna de Reviews -->
         <div class="entity-column">
             <h2>Reviews</h2>
             <div class="operation">
@@ -95,6 +98,7 @@
             </div>
         </div>
 
+        <!-- Coluna de Listas -->
         <div class="entity-column">
             <h2>Listas</h2>
             <div class="operation">
@@ -130,6 +134,7 @@
             return document.getElementById(id).value;
         }
 
+
         async function handleApiCall(resultDivId, method, endpoint, body = null) {
             const resultDiv = document.getElementById(resultDivId);
             resultDiv.textContent = 'Executando...';
@@ -144,18 +149,30 @@
 
                 const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
 
-                if (response.status === 204) { // No Content
-                    resultDiv.textContent = `Sucesso! (Status: ${response.status} No Content)`;
-                    return;
-                }
+                const contentType = response.headers.get("content-type");
+                let responseData;
 
-                const responseData = await response.json();
+                if (response.status === 204) { // No Content
+                    responseData = `Sucesso! (Status: ${response.status} No Content)`;
+                } else if (contentType && contentType.indexOf("application/json") !== -1) {
+                    responseData = await response.json();
+                } else {
+                    responseData = await response.text();
+                }
 
                 if (!response.ok) {
-                    throw new Error(responseData.message || JSON.stringify(responseData));
+                    if (typeof responseData === 'object' && responseData !== null && responseData.message) {
+                        throw new Error(responseData.message);
+                    }
+                    throw new Error(responseData);
                 }
 
-                resultDiv.textContent = `Sucesso! (Status: ${response.status})\n\n${JSON.stringify(responseData, null, 2)}`;
+                if (typeof responseData === 'object') {
+                    resultDiv.textContent = `Sucesso! (Status: ${response.status})\n\n${JSON.stringify(responseData, null, 2)}`;
+                } else {
+                    resultDiv.textContent = `Sucesso! (Status: ${response.status})\n\n${responseData}`;
+                }
+
             } catch (error) {
                 resultDiv.textContent = `Falha:\n${error.toString()}`;
             }
