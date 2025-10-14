@@ -11,5 +11,5 @@ public interface RegistroHash<T> {
 
   public void fromByteArray(byte[] ba) throws IOException; 
 
-void setId(int id);
+  void setId(int id);
 }

@@ -1,13 +1,13 @@
 package com.example.tpaedsiii.repository;
 
-import com.example.tpaedsiii.repository.bd.filme.Filme;
-import com.example.tpaedsiii.repository.bd.lista.Lista;
-import com.example.tpaedsiii.repository.bd.review.Review;
-import com.example.tpaedsiii.repository.bd.user.User;
-import com.example.tpaedsiii.repository.dao.filme.FilmeDAO;
-import com.example.tpaedsiii.repository.dao.lista.ListaDAO;
-import com.example.tpaedsiii.repository.dao.review.ReviewDAO;
-import com.example.tpaedsiii.repository.dao.user.UserDAO;
+import com.example.tpaedsiii.model.filme.Filme;
+import com.example.tpaedsiii.model.lista.Lista;
+import com.example.tpaedsiii.model.review.Review;
+import com.example.tpaedsiii.model.user.User;
+import com.example.tpaedsiii.repository.filme.FilmeRepository;
+import com.example.tpaedsiii.repository.lista.ListaRepository;
+import com.example.tpaedsiii.repository.review.ReviewRepository;
+import com.example.tpaedsiii.repository.user.UserRepository;
 
 import java.io.File;
 import java.time.LocalDate;
@@ -18,10 +18,10 @@ import java.util.Scanner;
 
 public class ConsoleTestRunner {
 
-    private static FilmeDAO filmeDAO;
-    private static ReviewDAO reviewDAO;
-    private static ListaDAO listaDAO;
-    private static UserDAO userDAO;
+    private static FilmeRepository filmeDAO;
+    private static ReviewRepository reviewDAO;
+    private static ListaRepository listaDAO;
+    private static UserRepository userDAO;
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -63,10 +63,10 @@ public class ConsoleTestRunner {
     private static boolean initializeDAOs() {
         try {
             System.out.println("Inicializando os DAOs e abrindo os arquivos...");
-            filmeDAO = new FilmeDAO();
-            reviewDAO = new ReviewDAO();
-            listaDAO = new ListaDAO();
-            userDAO = new UserDAO();
+            filmeDAO = new FilmeRepository();
+            reviewDAO = new ReviewRepository();
+            listaDAO = new ListaRepository();
+            userDAO = new UserRepository();
             System.out.println("Sistema de banco de dados pronto.\n");
             return true;
         } catch (Exception e) {
@@ -471,8 +471,13 @@ public class ConsoleTestRunner {
             
             System.out.println("\n-- ETAPA 2: TESTANDO UPDATE --");
             System.out.println("[AÇÃO] Alterando username de Alice para 'alice_v2'");
-            aliceLida.setUsername("alice_v2");
-            userDAO.alterarUser(aliceLida);
+            if (aliceLida != null) {
+                aliceLida.setUsername("alice_v2");
+                userDAO.alterarUser(aliceLida);
+            } else {
+                System.out.println("  -> FALHOU: aliceLida é null");
+                allTestsPassed = false;
+            }
             User aliceAtualizada = userDAO.buscarUser(aliceId);
             System.out.println("[VERIFICAÇÃO] Buscando User ID " + aliceId + " novamente -> Encontrado: " + aliceAtualizada);
             if (aliceAtualizada != null && aliceAtualizada.getUsername().equals("alice_v2")) { System.out.println("  -> PASSOU"); }

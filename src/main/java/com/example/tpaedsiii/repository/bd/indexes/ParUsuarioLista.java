@@ -2,7 +2,6 @@ package com.example.tpaedsiii.repository.bd.indexes;
 
 import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash;
 import java.io.*;
-import java.util.Objects;
 
 public class ParUsuarioLista implements RegistroHash<ParUsuarioLista> {
     private int userId;

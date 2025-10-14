@@ -2,7 +2,6 @@ package com.example.tpaedsiii.repository.bd.indexes;
 
 import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash;
 import java.io.*;
-import java.util.Objects;
 
 public class ParFilmeReview implements RegistroHash<ParFilmeReview> {
     private int filmeId;
@@ -15,11 +14,7 @@ public class ParFilmeReview implements RegistroHash<ParFilmeReview> {
     public int getReviewId() { return reviewId; }
 
     @Override public int size() { return SIZE; }
-
-    /**
-     * CORRIGIDO: Implementação com corpo VAZIO para satisfazer a interface.
-     * O ID gerado pelo HashExtensivel.create é irrelevante e simplesmente ignorado.
-     */
+    
     @Override
     public void setId(int id) {
         // Não faz nada. O corpo está intencionalmente vazio.
