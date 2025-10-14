@@ -42,22 +42,5 @@ public class ReviewService {
         return reviewRepository.delete(id);
     }
 
-    public Review buscarPorId(int id) throws Exception {
-        return reviewRepository.buscarReview(id);
-    }
-
-    public List<Review> buscarTodasReviews() throws Exception {
-        return reviewRepository.buscarTodasReviews();
-    }
-
-    public Review alterarReview(int id, float novaNota, String novoComentario) throws Exception {
-        Review review = reviewRepository.buscarReview(id);
-        if (review == null) {
-            throw new Exception("Review com ID " + id + " não encontrada para alteração.");
-        }
-        review.setNota(novaNota);
-        review.setComentario(novoComentario);
-        reviewRepository.alterarReview(review);
-        return review;
-    }
+    
 }

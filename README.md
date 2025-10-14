@@ -5,13 +5,13 @@
 <h1 align="center">🎬 Sistema de Gerenciamento de Filmes - AEDS III</h1>
 
 <p align="center">
-<!-- Badges de Status e Tecnologias -->
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Status-Conclu%C3%ADdo-brightgreen%3Fstyle%3Dfor-the-badge" alt="Status do Projeto">
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Java-21-blue.svg%3Fstyle%3Dfor-the-badge%26logo%3Dopenjdk" alt="Java">
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Spring_Boot-3.3%2B-green.svg%3Fstyle%3Dfor-the-badge%26logo%3Dspring" alt="Spring Boot">
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Maven-3.8%2B-red.svg%3Fstyle%3Dfor-the-badge%26logo%3Dapache-maven" alt="Maven">
 <img src="https://www.google.com/search?q=https://img.shields.io/badge/Licen%C3%A7a-MIT-informational%3Fstyle%3Dfor-the-badge" alt="Licença MIT">
 </p>
+
 📝 Descrição do Projeto
 
 Este projeto implementa um sistema completo de gerenciamento de filmes, usuários, avaliações e listas. O núcleo do sistema é um banco de dados de baixo nível construído em Java, utilizando arquivos de acesso aleatório para persistência.
