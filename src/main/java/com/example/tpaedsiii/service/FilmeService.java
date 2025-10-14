@@ -2,7 +2,6 @@ package com.example.tpaedsiii.service;
 
 import com.example.tpaedsiii.model.filme.Filme;
 import com.example.tpaedsiii.repository.filme.FilmeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -11,7 +10,6 @@ public class FilmeService {
 
     private final FilmeRepository filmeRepository;
 
-    @Autowired
     public FilmeService(FilmeRepository filmeRepository) {
         this.filmeRepository = filmeRepository;
     }

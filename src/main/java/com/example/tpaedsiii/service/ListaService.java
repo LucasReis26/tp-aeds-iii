@@ -3,7 +3,6 @@ package com.example.tpaedsiii.service;
 import com.example.tpaedsiii.model.lista.Lista;
 import com.example.tpaedsiii.repository.filme.FilmeRepository;
 import com.example.tpaedsiii.repository.lista.ListaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -11,9 +10,8 @@ import java.util.List;
 public class ListaService {
 
     private final ListaRepository listaRepository;
-    private final FilmeRepository filmeRepository; // Dependência para buscar os filmes completos
+    private final FilmeRepository filmeRepository; 
 
-    @Autowired
     public ListaService(ListaRepository listaRepository, FilmeRepository filmeRepository) {
         this.listaRepository = listaRepository;
         this.filmeRepository = filmeRepository;

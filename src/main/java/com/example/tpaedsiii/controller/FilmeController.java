@@ -2,23 +2,34 @@ package com.example.tpaedsiii.controller;
 
 import com.example.tpaedsiii.model.filme.Filme;
 import com.example.tpaedsiii.service.FilmeService;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import java.net.URI;
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/filmes")
+@Tag(name = "Filmes", description = "Endpoints para o gerenciamento de filmes")
+@CrossOrigin(origins = "*")
 public class FilmeController {
 
     private final FilmeService filmeService;
 
-    @Autowired
     public FilmeController(FilmeService filmeService) {
         this.filmeService = filmeService;
     }
 
+    @Operation(summary = "Busca um filme pelo seu ID único")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Filme não encontrado")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<?> getFilmeById(@PathVariable int id) {
         try {
@@ -29,6 +40,10 @@ public class FilmeController {
         }
     }
 
+    @Operation(summary = "Busca filmes cujo título contenha um determinado termo")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso (pode retornar uma lista vazia)")
+    })
     @GetMapping("/buscar")
     public ResponseEntity<?> searchFilmesByTitle(@RequestParam String titulo) {
         try {
@@ -39,6 +54,10 @@ public class FilmeController {
         }
     }
 
+    @Operation(summary = "Cria um novo filme no sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Filme criado com sucesso")
+    })
     @PostMapping
     public ResponseEntity<?> createFilme(@RequestBody Filme filme) {
         try {
@@ -50,6 +69,11 @@ public class FilmeController {
         }
     }
     
+    @Operation(summary = "Exclui um filme pelo seu ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Filme excluído com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Filme não encontrado para exclusão")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteFilme(@PathVariable int id) {
         try {

@@ -1,25 +1,31 @@
 package com.example.tpaedsiii.controller;
 
-import com.example.tpaedsiii.model.lista.Lista;
+import com.example.tpaedsiii.model.lista.Lista; 
 import com.example.tpaedsiii.service.ListaService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus; // IMPORTAÇÃO NECESSÁRIA
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/listas")
+@Tag(name = "Listas", description = "Endpoints para gerenciamento de listas de filmes dos usuários")
+@CrossOrigin(origins = "*")
 public class ListaController {
 
     private final ListaService listaService;
 
-    @Autowired
     public ListaController(ListaService listaService) {
         this.listaService = listaService;
     }
 
+    @Operation(summary = "Cria as listas padrão ('Favoritos', etc.) para um usuário, se ainda não existirem")
     @PostMapping("/user/{userId}/init-padrao")
     public ResponseEntity<?> initializeDefaultLists(@PathVariable int userId) {
         try {
@@ -30,6 +36,7 @@ public class ListaController {
         }
     }
 
+    @Operation(summary = "Cria uma nova lista personalizada para um usuário")
     @PostMapping
     public ResponseEntity<?> createCustomList(@RequestBody Lista lista) {
         try {
@@ -41,6 +48,11 @@ public class ListaController {
         }
     }
 
+    @Operation(summary = "Adiciona um filme a uma lista existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Filme adicionado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Lista ou filme não encontrado")
+    })
     @PostMapping("/{listaId}/filmes/{filmeId}")
     public ResponseEntity<?> addFilmeToList(@PathVariable int listaId, @PathVariable int filmeId) {
         try {
@@ -51,6 +63,11 @@ public class ListaController {
         }
     }
 
+    @Operation(summary = "Remove um filme de uma lista")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Filme removido com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Relação entre lista e filme não encontrada")
+    })
     @DeleteMapping("/{listaId}/filmes/{filmeId}")
     public ResponseEntity<?> removeFilmeFromList(@PathVariable int listaId, @PathVariable int filmeId) {
         try {
@@ -64,6 +81,7 @@ public class ListaController {
         }
     }
 
+    @Operation(summary = "Busca todas as listas de um usuário, incluindo os filmes de cada uma")
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getListsByUser(@PathVariable int userId) {
         try {
@@ -74,6 +92,7 @@ public class ListaController {
         }
     }
     
+    @Operation(summary = "Exclui uma lista pelo seu ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteList(@PathVariable int id) {
         try {

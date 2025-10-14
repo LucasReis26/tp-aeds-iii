@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel de Testes - API de Gerenciamento de Filmes</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px; background-color: #f7f7f7; }
+        h1 { text-align: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 30px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .entity-column { background-color: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .operation { border-top: 1px solid #eee; padding-top: 15px; margin-top: 15px; }
+        h2, h3 { margin-top: 0; color: #333; }
+        h3 { font-size: 1.1em; color: #555; }
+        input, button { width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 10px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #f2f2f2; padding: 10px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+    <h1>Painel de Testes - API de Gerenciamento de Filmes</h1>
+
+    <div class="grid-container">
+
+        <div class="entity-column">
+            <h2>Usuários</h2>
+            <div class="operation">
+                <h3>Criar Usuário</h3>
+                <input id="user-username" placeholder="Nome de usuário">
+                <input id="user-description" placeholder="Descrição">
+                <input id="user-password" type="password" placeholder="Senha">
+                <button onclick="handleApiCall('user-result', 'POST', '/users', { username: getValue('user-username'), description: getValue('user-description'), password: getValue('user-password') })">Criar</button>
+                <pre id="user-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Buscar/Alterar/Excluir Usuário</h3>
+                <input id="user-id" type="number" placeholder="ID do Usuário">
+                <button onclick="handleApiCall('user-id-result', 'GET', `/users/${getValue('user-id')}`)">Buscar por ID</button>
+                <input id="user-new-username" placeholder="Novo nome de usuário (para alterar)">
+                <button onclick="handleApiCall('user-id-result', 'PUT', `/users/${getValue('user-id')}`, { username: getValue('user-new-username') })">Alterar</button>
+                <button onclick="handleApiCall('user-id-result', 'DELETE', `/users/${getValue('user-id')}`)">Excluir</button>
+                <pre id="user-id-result"></pre>
+            </div>
+        </div>
+
+        <div class="entity-column">
+            <h2>Filmes</h2>
+            <div class="operation">
+                <h3>Criar Filme</h3>
+                <input id="filme-title" placeholder="Título">
+                <input id="filme-releaseDate" type="date" placeholder="Data de Lançamento">
+                <input id="filme-score" type="number" placeholder="Score (0-100)">
+                <input id="filme-duration" type="number" placeholder="Duração (minutos)">
+                <input id="filme-rating" type="number" placeholder="Classificação Indicativa">
+                <input id="filme-directors" placeholder="Diretores (separados por vírgula)">
+                <input id="filme-actors" placeholder="Atores (separados por vírgula)">
+                <button onclick="criarFilme()">Criar</button>
+                <pre id="filme-create-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Buscar/Excluir Filme por ID</h3>
+                <input id="filme-id" type="number" placeholder="ID do Filme">
+                <button onclick="handleApiCall('filme-id-result', 'GET', `/filmes/${getValue('filme-id')}`)">Buscar</button>
+                <button onclick="handleApiCall('filme-id-result', 'DELETE', `/filmes/${getValue('filme-id')}`)">Excluir</button>
+                <pre id="filme-id-result"></pre>
+            </div>
+        </div>
+
+        <div class="entity-column">
+            <h2>Reviews</h2>
+            <div class="operation">
+                <h3>Criar Review</h3>
+                <input id="review-userId" type="number" placeholder="ID do Usuário">
+                <input id="review-filmeId" type="number" placeholder="ID do Filme">
+                <input id="review-nota" type="number" step="0.1" placeholder="Nota (0.0 - 10.0)">
+                <input id="review-comentario" placeholder="Comentário">
+                <button onclick="handleApiCall('review-create-result', 'POST', '/reviews', { userId: getValue('review-userId'), filmeId: getValue('review-filmeId'), nota: getValue('review-nota'), comentario: getValue('review-comentario') })">Criar</button>
+                <pre id="review-create-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Buscar/Excluir Review por ID</h3>
+                <input id="review-id" type="number" placeholder="ID da Review">
+                <button onclick="handleApiCall('review-id-result', 'GET', `/reviews/${getValue('review-id')}`)">Buscar</button>
+                <button onclick="handleApiCall('review-id-result', 'DELETE', `/reviews/${getValue('review-id')}`)">Excluir</button>
+                <pre id="review-id-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Buscar Reviews por Relação</h3>
+                <input id="review-search-userId" type="number" placeholder="ID do Usuário">
+                <button onclick="handleApiCall('review-search-result', 'GET', `/reviews/user/${getValue('review-search-userId')}`)">Buscar por Usuário</button>
+                <input id="review-search-filmeId" type="number" placeholder="ID do Filme">
+                <button onclick="handleApiCall('review-search-result', 'GET', `/reviews/filme/${getValue('review-search-filmeId')}`)">Buscar por Filme</button>
+                <pre id="review-search-result"></pre>
+            </div>
+        </div>
+
+        <div class="entity-column">
+            <h2>Listas</h2>
+            <div class="operation">
+                <h3>Gerenciar Listas de Usuário</h3>
+                <input id="lista-userId" type="number" placeholder="ID do Usuário">
+                <button onclick="handleApiCall('lista-user-result', 'POST', `/listas/user/${getValue('lista-userId')}/init-padrao`)">Criar Listas Padrão</button>
+                <input id="lista-nome" placeholder="Nome da Lista Personalizada">
+                <button onclick="handleApiCall('lista-user-result', 'POST', '/listas', { userId: getValue('lista-userId'), nome: getValue('lista-nome'), padrao: false })">Criar Lista Personalizada</button>
+                <button onclick="handleApiCall('lista-user-result', 'GET', `/listas/user/${getValue('lista-userId')}`)">Ver Todas as Listas do Usuário</button>
+                <pre id="lista-user-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Gerenciar Filmes em Listas</h3>
+                <input id="lista-id-rel" type="number" placeholder="ID da Lista">
+                <input id="filme-id-rel" type="number" placeholder="ID do Filme">
+                <button onclick="handleApiCall('lista-rel-result', 'POST', `/listas/${getValue('lista-id-rel')}/filmes/${getValue('filme-id-rel')}`)">Adicionar Filme à Lista</button>
+                <button onclick="handleApiCall('lista-rel-result', 'DELETE', `/listas/${getValue('lista-id-rel')}/filmes/${getValue('filme-id-rel')}`)">Remover Filme da Lista</button>
+                <pre id="lista-rel-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Excluir Lista por ID</h3>
+                <input id="lista-id-del" type="number" placeholder="ID da Lista">
+                <button onclick="handleApiCall('lista-del-result', 'DELETE', `/listas/${getValue('lista-id-del')}`)">Excluir Lista</button>
+                <pre id="lista-del-result"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+
+        function getValue(id) {
+            return document.getElementById(id).value;
+        }
+
+        async function handleApiCall(resultDivId, method, endpoint, body = null) {
+            const resultDiv = document.getElementById(resultDivId);
+            resultDiv.textContent = 'Executando...';
+            try {
+                const options = {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                };
+                if (body) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+
+                if (response.status === 204) { // No Content
+                    resultDiv.textContent = `Sucesso! (Status: ${response.status} No Content)`;
+                    return;
+                }
+
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(responseData.message || JSON.stringify(responseData));
+                }
+
+                resultDiv.textContent = `Sucesso! (Status: ${response.status})\n\n${JSON.stringify(responseData, null, 2)}`;
+            } catch (error) {
+                resultDiv.textContent = `Falha:\n${error.toString()}`;
+            }
+        }
+
+        function criarFilme() {
+            const body = {
+                title: getValue('filme-title'),
+                releaseDate: getValue('filme-releaseDate'),
+                score: parseInt(getValue('filme-score')),
+                duration: parseInt(getValue('filme-duration')),
+                rating: parseInt(getValue('filme-rating')),
+                directors: getValue('filme-directors').split(',').map(s => s.trim()).filter(Boolean),
+                actors: getValue('filme-actors').split(',').map(s => s.trim()).filter(Boolean)
+            };
+            handleApiCall('filme-create-result', 'POST', '/filmes', body);
+        }
+    </script>
+</body>
+</html>
