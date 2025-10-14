@@ -1,0 +1,5 @@
+PARA ESSA ENTREGA
+//TODO: Métodos de listar todos para todos os objetos
+//TODO: Arvore B+
+//TODO: Consertar o deletar review por ID
+//TODO: Documentação
