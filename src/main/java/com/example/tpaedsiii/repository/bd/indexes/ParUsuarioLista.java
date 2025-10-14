@@ -30,7 +30,6 @@ public class ParUsuarioLista implements RegistroHash<ParUsuarioLista> {
         return SIZE;
     }
 
-    @Override
     public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -39,7 +38,6 @@ public class ParUsuarioLista implements RegistroHash<ParUsuarioLista> {
         return baos.toByteArray();
     }
 
-    @Override
     public void fromByteArray(byte[] ba) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(ba);
         DataInputStream dis = new DataInputStream(bais);
@@ -49,7 +47,5 @@ public class ParUsuarioLista implements RegistroHash<ParUsuarioLista> {
 
     @Override
     public void setId(int id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setId'");
     }
 }

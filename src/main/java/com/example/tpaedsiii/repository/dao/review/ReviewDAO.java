@@ -18,11 +18,13 @@ public class ReviewDAO {
         idxFilmeReview = new HashExtensivel<>(ParFilmeReview.class.getConstructor(), 10, "./data/idx_film_rev_d.db", "./data/idx_film_rev_c.db");
     }
 
-    public int create(Review review) throws Exception {
-        hashReviews.create(review);
-        idxUsuarioReview.create(new ParUsuarioReview(review.getUserId(), review.getId()));
-        idxFilmeReview.create(new ParFilmeReview(review.getFilmeId(), review.getId()));
-        return review.getId();
+     public int create(Review review) throws Exception {
+        int novoId = hashReviews.create(review);
+        
+        idxUsuarioReview.create(new ParUsuarioReview(review.getUserId(), novoId));
+        idxFilmeReview.create(new ParFilmeReview(review.getFilmeId(), novoId));
+        
+        return novoId;
     }
 
     public Review read(int id) throws Exception {

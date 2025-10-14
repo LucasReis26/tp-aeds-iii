@@ -108,4 +108,13 @@ public class ListaDAO {
             }
         }
     }
+
+    public boolean removerFilmeDaLista(int listaId, int filmeId) throws Exception {
+    // 1. Cria um objeto "Par" que representa a ficha exata que queremos encontrar e deletar.
+    ParListaFilme parParaDeletar = new ParListaFilme(listaId, filmeId);
+    
+    // 2. Chama o novo método delete(T elem) do HashExtensivel, que usará o método
+    //    .equals() do objeto para encontrar e remover a entrada específica do cesto.
+    return idxListaFilme.delete(parParaDeletar);
+}
 }

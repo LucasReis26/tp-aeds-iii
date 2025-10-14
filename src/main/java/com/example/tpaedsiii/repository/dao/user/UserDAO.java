@@ -1,32 +1,26 @@
 package com.example.tpaedsiii.repository.dao.user;
 
+import com.example.tpaedsiii.repository.bd.indexes.base.HashExtensivel;
 import com.example.tpaedsiii.repository.bd.user.User;
-import com.example.tpaedsiii.repository.bd.base.Arquivo;
-import java.util.List; // Importado
+import java.util.List;
 
 public class UserDAO {
-    private final Arquivo<User> arqUsers;
+    private final HashExtensivel<User> hashUsers;
 
     public UserDAO() throws Exception {
-        arqUsers = new Arquivo<>("data/Users.db", User.class.getConstructor());
+        hashUsers = new HashExtensivel<>(User.class.getConstructor(), 4, "data/Users_d.db", "data/Users_c.db");
     }
 
     public int incluirUser(User user) throws Exception {
-        return arqUsers.create(user);
+        return hashUsers.create(user);
     }
 
     public User buscarUser(int id) throws Exception {
-        return arqUsers.read(id);
+        return hashUsers.read(id);
     }
     
-    /**
-     * NOVO MÉTODO: Busca um usuário pelo seu nome de usuário (username).
-     * AVISO: Esta operação é LENTA em bancos de dados grandes pois lê todos os registros.
-     * @param username O nome de usuário a ser procurado.
-     * @return O objeto User, ou null se não for encontrado.
-     */
     public User buscarPorUsername(String username) throws Exception {
-        List<User> todosOsUsuarios = arqUsers.readAll(); // Assume que readAll() existe em Arquivo.java
+        List<User> todosOsUsuarios = hashUsers.readAll();
         for (User u : todosOsUsuarios) {
             if (u.getUsername().equalsIgnoreCase(username)) {
                 return u;
@@ -36,10 +30,10 @@ public class UserDAO {
     }
 
     public boolean alterarUser(User user) throws Exception {
-        return arqUsers.update(user);
+        return hashUsers.update(user);
     }
 
     public boolean excluirUser(int id) throws Exception {
-        return arqUsers.delete(id);
+        return hashUsers.delete(id);
     }
 }

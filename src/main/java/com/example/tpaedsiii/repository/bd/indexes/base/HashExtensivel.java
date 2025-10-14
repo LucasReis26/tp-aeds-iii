@@ -7,12 +7,12 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.reflect.Constructor;
 
 public class HashExtensivel<T extends RegistroHash<T>> {
-    private static final int TAMANHO_CABECALHO_ID = 4;
+
     String nomeArquivoDiretorio;
     String nomeArquivoCestos;
     RandomAccessFile arqDiretorio;
@@ -20,245 +20,149 @@ public class HashExtensivel<T extends RegistroHash<T>> {
     int quantidadeDadosPorCesto;
     Diretorio diretorio;
     Constructor<T> construtor;
+    private static final int TAMANHO_CABECALHO_ID = 4; // 4 bytes para o contador de ID (int)
 
+    // As classes internas Cesto e Diretorio permanecem inalteradas
     public class Cesto {
         Constructor<T> construtor;
-        short quantidadeMaxima; // quantidade máxima de elementos que o cesto pode conter
-        int bytesPorElemento; // tamanho fixo de cada elemento em bytes
-        short bytesPorCesto; // tamanho fixo do cesto em bytes
+        short quantidadeMaxima;
+        int bytesPorElemento;
+        short bytesPorCesto;
+        byte profundidadeLocal;
+        short quantidade;
+        ArrayList<T> elementos;
 
-        byte profundidadeLocal; // profundidade local do cesto
-        short quantidade; // quantidade de elementos presentes no cesto
-        ArrayList<T> elementos; // sequência de elementos armazenados
-
-        public Cesto(Constructor<T> ct, int qtdmax) throws Exception {
-            this(ct, qtdmax, 0);
-        }
-
+        public Cesto(Constructor<T> ct, int qtdmax) throws Exception { this(ct, qtdmax, 0); }
         public Cesto(Constructor<T> ct, int qtdmax, int pl) throws Exception {
             construtor = ct;
-            if (qtdmax > 32767)
-                throw new Exception("Quantidade máxima de 32.767 elementos");
-            if (pl > 127)
-                throw new Exception("Profundidade local máxima de 127 bits");
+            if (qtdmax > 32767) throw new Exception("Quantidade máxima de 32.767 elementos");
+            if (pl > 127) throw new Exception("Profundidade local máxima de 127 bits");
             profundidadeLocal = (byte) pl;
             quantidade = 0;
             quantidadeMaxima = (short) qtdmax;
             elementos = new ArrayList<>(quantidadeMaxima);
-            bytesPorElemento = ct.newInstance().size();
+            if (ct.getGenericParameterTypes().length == 0) { // Garante que o construtor é vazio
+                 bytesPorElemento = ct.newInstance().size();
+            } else {
+                 throw new InstantiationException("Construtor da classe genérica não é vazio.");
+            }
             bytesPorCesto = (short) (bytesPorElemento * quantidadeMaxima + 3);
         }
-
         public byte[] toByteArray() throws Exception {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
             dos.writeByte(profundidadeLocal);
             dos.writeShort(quantidade);
-            int i = 0;
-            while (i < quantidade) {
+            for (int i = 0; i < quantidade; i++) {
                 dos.write(elementos.get(i).toByteArray());
-                i++;
             }
             byte[] vazio = new byte[bytesPorElemento];
-            while (i < quantidadeMaxima) {
+            for (int i = quantidade; i < quantidadeMaxima; i++) {
                 dos.write(vazio);
-                i++;
             }
             return baos.toByteArray();
         }
-
         public void fromByteArray(byte[] ba) throws Exception {
             ByteArrayInputStream bais = new ByteArrayInputStream(ba);
             DataInputStream dis = new DataInputStream(bais);
             profundidadeLocal = dis.readByte();
             quantidade = dis.readShort();
-            int i = 0;
             elementos = new ArrayList<>(quantidadeMaxima);
             byte[] dados = new byte[bytesPorElemento];
-            T elem;
-            while (i < quantidadeMaxima) {
+            for (int i = 0; i < quantidadeMaxima; i++) {
                 dis.read(dados);
-                elem = construtor.newInstance();
+                T elem = construtor.newInstance();
                 elem.fromByteArray(dados);
                 elementos.add(elem);
-                i++;
             }
         }
-
-        // Inserir elementos no cesto
         public boolean create(T elem) {
-            if (full())
-                return false;
-            int i = quantidade - 1; // posição do último elemento no cesto
-            while (i >= 0 && elem.hashCode() < elementos.get(i).hashCode())
-                i--;
+            if (full()) return false;
+            int i = quantidade - 1;
+            while (i >= 0 && elem.hashCode() < elementos.get(i).hashCode()) i--;
             elementos.add(i + 1, elem);
             quantidade++;
             return true;
         }
-
-        // Buscar um elemento no cesto
         public T read(int chave) {
-            if (empty())
-                return null;
+            if (empty()) return null;
             int i = 0;
-            while (i < quantidade && chave > elementos.get(i).hashCode())
-                i++;
-            if (i < quantidade && chave == elementos.get(i).hashCode())
-                return elementos.get(i);
-            else
-                return null;
+            while (i < quantidade && chave > elementos.get(i).hashCode()) i++;
+            if (i < quantidade && chave == elementos.get(i).hashCode()) return elementos.get(i);
+            return null;
         }
-
-        // atualizar um elemento do cesto
         public boolean update(T elem) {
-            if (empty())
-                return false;
+            if (empty()) return false;
             int i = 0;
-            while (i < quantidade && elem.hashCode() > elementos.get(i).hashCode())
-                i++;
+            while (i < quantidade && elem.hashCode() > elementos.get(i).hashCode()) i++;
             if (i < quantidade && elem.hashCode() == elementos.get(i).hashCode()) {
                 elementos.set(i, elem);
                 return true;
-            } else
-                return false;
+            }
+            return false;
         }
-
-        // pagar um elemento do cesto
         public boolean delete(int chave) {
-            if (empty())
-                return false;
+            if (empty()) return false;
             int i = 0;
-            while (i < quantidade && chave > elementos.get(i).hashCode())
-                i++;
-            if (chave == elementos.get(i).hashCode()) {
+            while (i < quantidade && chave > elementos.get(i).hashCode()) i++;
+            if (i < quantidade && chave == elementos.get(i).hashCode()) {
                 elementos.remove(i);
                 quantidade--;
                 return true;
-            } else
-                return false;
+            }
+            return false;
         }
-
-        public boolean empty() {
-            return quantidade == 0;
-        }
-
-        public boolean full() {
-            return quantidade == quantidadeMaxima;
-        }
-
+        public boolean empty() { return quantidade == 0; }
+        public boolean full() { return quantidade == quantidadeMaxima; }
         public String toString() {
             String s = "Profundidade Local: " + profundidadeLocal + "\nQuantidade: " + quantidade + "\n| ";
-            int i = 0;
-            while (i < quantidade) {
-                s += elementos.get(i).toString() + " | ";
-                i++;
-            }
-            while (i < quantidadeMaxima) {
-                s += "- | ";
-                i++;
-            }
+            for (int i = 0; i < quantidade; i++) s += elementos.get(i).toString() + " | ";
+            for (int i = quantidade; i < quantidadeMaxima; i++) s += "- | ";
             return s;
         }
-
-        public int size() {
-            return bytesPorCesto;
-        }
-
+        public int size() { return bytesPorCesto; }
     }
-
     protected class Diretorio {
-
         byte profundidadeGlobal;
         long[] enderecos;
-
-        public Diretorio() {
-            profundidadeGlobal = 0;
-            enderecos = new long[1];
-            enderecos[0] = 0;
-        }
-
-        public boolean atualizaEndereco(int p, long e) {
-            if (p > Math.pow(2, profundidadeGlobal))
-                return false;
-            enderecos[p] = e;
-            return true;
-        }
-
+        public Diretorio() { profundidadeGlobal = 0; enderecos = new long[1]; enderecos[0] = 0; }
+        public boolean atualizaEndereco(int p, long e) { if (p >= Math.pow(2, profundidadeGlobal)) return false; enderecos[p] = e; return true; }
         public byte[] toByteArray() throws IOException {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream dos = new DataOutputStream(baos);
             dos.writeByte(profundidadeGlobal);
             int quantidade = (int) Math.pow(2, profundidadeGlobal);
-            int i = 0;
-            while (i < quantidade) {
-                dos.writeLong(enderecos[i]);
-                i++;
-            }
+            for (int i = 0; i < quantidade; i++) dos.writeLong(enderecos[i]);
             return baos.toByteArray();
         }
-
         public void fromByteArray(byte[] ba) throws IOException {
             ByteArrayInputStream bais = new ByteArrayInputStream(ba);
             DataInputStream dis = new DataInputStream(bais);
             profundidadeGlobal = dis.readByte();
             int quantidade = (int) Math.pow(2, profundidadeGlobal);
             enderecos = new long[quantidade];
-            int i = 0;
-            while (i < quantidade) {
-                enderecos[i] = dis.readLong();
-                i++;
-            }
+            for (int i = 0; i < quantidade; i++) enderecos[i] = dis.readLong();
         }
-
         public String toString() {
             String s = "\nProfundidade global: " + profundidadeGlobal;
-            int i = 0;
             int quantidade = (int) Math.pow(2, profundidadeGlobal);
-            while (i < quantidade) {
-                s += "\n" + i + ": " + enderecos[i];
-                i++;
-            }
+            for (int i = 0; i < quantidade; i++) s += "\n" + i + ": " + enderecos[i];
             return s;
         }
-
-        protected long endereço(int p) {
-            if (p > Math.pow(2, profundidadeGlobal))
-                return -1;
-            return enderecos[p];
-        }
-
+        protected long endereço(int p) { if (p >= Math.pow(2, profundidadeGlobal)) return -1; return enderecos[p]; }
         protected boolean duplica() {
-            if (profundidadeGlobal == 127)
-                return false;
+            if (profundidadeGlobal == 127) return false;
             profundidadeGlobal++;
             int q1 = (int) Math.pow(2, profundidadeGlobal - 1);
             int q2 = (int) Math.pow(2, profundidadeGlobal);
             long[] novosEnderecos = new long[q2];
-            int i = 0;
-            while (i < q1) { // copia o vetor anterior para a primeiro metade do novo vetor
-                novosEnderecos[i] = enderecos[i];
-                i++;
-            }
-            while (i < q2) { // copia o vetor anterior para a segunda metade do novo vetor
-                novosEnderecos[i] = enderecos[i - q1];
-                i++;
-            }
+            for (int i = 0; i < q1; i++) novosEnderecos[i] = enderecos[i];
+            for (int i = q1; i < q2; i++) novosEnderecos[i] = enderecos[i - q1];
             enderecos = novosEnderecos;
             return true;
         }
-
-        // Para efeito de determinar o cesto em que o elemento deve ser inserido,
-        // só serão considerados valores absolutos da chave.
-        protected int hash(int chave) {
-            return Math.abs(chave) % (int) Math.pow(2, profundidadeGlobal);
-        }
-
-        // Método auxiliar para atualizar endereço ao duplicar o diretório
-        protected int hash2(int chave, int pl) { // cálculo do hash para uma dada profundidade local
-            return Math.abs(chave) % (int) Math.pow(2, pl);
-        }
-
+        protected int hash(int chave) { return Math.abs(chave) % (int) Math.pow(2, profundidadeGlobal); }
+        protected int hash2(int chave, int pl) { return Math.abs(chave) % (int) Math.pow(2, pl); }
     }
 
     public HashExtensivel(Constructor<T> ct, int n, String nd, String nc) throws Exception {
@@ -267,47 +171,26 @@ public class HashExtensivel<T extends RegistroHash<T>> {
         nomeArquivoDiretorio = nd;
         nomeArquivoCestos = nc;
 
-        // ... (lógica de criação de diretórios que já corrigimos)
+        File fileDiretorio = new File(nd);
+        if (fileDiretorio.getParentFile() != null) fileDiretorio.getParentFile().mkdirs();
+        File fileCestos = new File(nc);
+        if (fileCestos.getParentFile() != null) fileCestos.getParentFile().mkdirs();
 
         arqDiretorio = new RandomAccessFile(nomeArquivoDiretorio, "rw");
         arqCestos = new RandomAccessFile(nomeArquivoCestos, "rw");
 
         if (arqDiretorio.length() == 0) {
-            // NOVO: Inicializa o cabeçalho com o último ID usado = 0
             arqDiretorio.writeInt(0);
-
             diretorio = new Diretorio();
             byte[] bd = diretorio.toByteArray();
             arqDiretorio.write(bd);
-
-            Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
-            bd = c.toByteArray();
-            arqCestos.seek(0);
-            arqCestos.write(bd);
-        }
-    }
-
-    public List<T> readAll(int chave) throws Exception {
-        byte[] bd = new byte[(int) arqDiretorio.length()];
-        arqDiretorio.seek(0);
-        arqDiretorio.read(bd);
-        diretorio = new Diretorio();
-        diretorio.fromByteArray(bd);
-        int i = diretorio.hash(chave);
-        long enderecoCesto = diretorio.endereço(i);
-        Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
-        byte[] ba = new byte[c.size()];
-        arqCestos.seek(enderecoCesto);
-        arqCestos.read(ba);
-        c.fromByteArray(ba);
-        ArrayList<T> resultados = new ArrayList<>();
-        for (int j = 0; j < c.quantidade; j++) {
-            T elem = c.elementos.get(j);
-            if (elem.hashCode() == chave) {
-                resultados.add(elem);
+            if (arqCestos.length() == 0) {
+                Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
+                bd = c.toByteArray();
+                arqCestos.seek(0);
+                arqCestos.write(bd);
             }
         }
-        return resultados;
     }
 
     public synchronized int create(T elem) throws Exception {
@@ -326,7 +209,6 @@ public class HashExtensivel<T extends RegistroHash<T>> {
 
         int i = diretorio.hash(elem.hashCode());
         long enderecoCesto = diretorio.endereço(i);
-
         Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
         byte[] ba = new byte[c.size()];
         arqCestos.seek(enderecoCesto);
@@ -341,9 +223,7 @@ public class HashExtensivel<T extends RegistroHash<T>> {
         }
 
         byte pl = c.profundidadeLocal;
-        if (pl >= diretorio.profundidadeGlobal) {
-            diretorio.duplica();
-        }
+        if (pl >= diretorio.profundidadeGlobal) diretorio.duplica();
         byte pg = diretorio.profundidadeGlobal;
 
         Cesto c1 = new Cesto(construtor, quantidadeDadosPorCesto, pl + 1);
@@ -360,9 +240,7 @@ public class HashExtensivel<T extends RegistroHash<T>> {
         int max = (int) Math.pow(2, pg);
         boolean troca = false;
         for (int j = inicio; j < max; j += deslocamento) {
-            if (troca) {
-                diretorio.atualizaEndereco(j, novoEndereco);
-            }
+            if (troca) diretorio.atualizaEndereco(j, novoEndereco);
             troca = !troca;
         }
 
@@ -371,97 +249,128 @@ public class HashExtensivel<T extends RegistroHash<T>> {
         arqDiretorio.write(bd);
         arqDiretorio.setLength(TAMANHO_CABECALHO_ID + bd.length);
 
-        for (int j = 0; j < c.quantidade; j++) {
-            this.create(c.elementos.get(j));
-        }
+        for (int j = 0; j < c.quantidade; j++) this.create(c.elementos.get(j));
         this.create(elem);
 
         return novoID;
     }
-
+    
     public T read(int chave) throws Exception {
-
-        // Carrega o diretório
-        byte[] bd = new byte[(int) arqDiretorio.length()];
-        arqDiretorio.seek(0);
+        byte[] bd = new byte[(int) (arqDiretorio.length() - TAMANHO_CABECALHO_ID)];
+        arqDiretorio.seek(TAMANHO_CABECALHO_ID);
         arqDiretorio.read(bd);
         diretorio = new Diretorio();
         diretorio.fromByteArray(bd);
-
-        // Identifica a hash do diretório,
         int i = diretorio.hash(chave);
-
-        // Recupera o cesto
         long enderecoCesto = diretorio.endereço(i);
+        if (enderecoCesto == -1) return null;
         Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
         byte[] ba = new byte[c.size()];
         arqCestos.seek(enderecoCesto);
         arqCestos.read(ba);
         c.fromByteArray(ba);
-
         return c.read(chave);
     }
-
-    public boolean update(T elem) throws Exception {
-
-        // Carrega o diretório
-        byte[] bd = new byte[(int) arqDiretorio.length()];
-        arqDiretorio.seek(0);
+    
+    public List<T> readAll(int chave) throws Exception {
+        byte[] bd = new byte[(int) (arqDiretorio.length() - TAMANHO_CABECALHO_ID)];
+        arqDiretorio.seek(TAMANHO_CABECALHO_ID);
         arqDiretorio.read(bd);
         diretorio = new Diretorio();
         diretorio.fromByteArray(bd);
-
-        // Identifica a hash do diretório,
-        int i = diretorio.hash(elem.hashCode());
-
-        // Recupera o cesto
+        int i = diretorio.hash(chave);
         long enderecoCesto = diretorio.endereço(i);
+        if (enderecoCesto == -1) return new ArrayList<>();
         Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
         byte[] ba = new byte[c.size()];
         arqCestos.seek(enderecoCesto);
         arqCestos.read(ba);
         c.fromByteArray(ba);
+        ArrayList<T> resultados = new ArrayList<>();
+        for (int j = 0; j < c.quantidade; j++) {
+            T elem = c.elementos.get(j);
+            if (elem.hashCode() == chave) resultados.add(elem);
+        }
+        return resultados;
+    }
+    
+    public List<T> readAll() throws Exception {
+        ArrayList<T> todosOsElementos = new ArrayList<>();
+        arqCestos.seek(0);
+        while (arqCestos.getFilePointer() < arqCestos.length()) {
+            Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
+            byte[] ba = new byte[c.size()];
+            arqCestos.read(ba);
+            c.fromByteArray(ba);
+            for (int i = 0; i < c.quantidade; i++) todosOsElementos.add(c.elementos.get(i));
+        }
+        return todosOsElementos;
+    }
 
-        // atualiza o dado
-        if (!c.update(elem))
-            return false;
-
-        // Atualiza o cesto
+    public synchronized boolean update(T elem) throws Exception {
+        byte[] bd = new byte[(int) (arqDiretorio.length() - TAMANHO_CABECALHO_ID)];
+        arqDiretorio.seek(TAMANHO_CABECALHO_ID);
+        arqDiretorio.read(bd);
+        diretorio = new Diretorio();
+        diretorio.fromByteArray(bd);
+        int i = diretorio.hash(elem.hashCode());
+        long enderecoCesto = diretorio.endereço(i);
+        if (enderecoCesto == -1) return false;
+        Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
+        byte[] ba = new byte[c.size()];
+        arqCestos.seek(enderecoCesto);
+        arqCestos.read(ba);
+        c.fromByteArray(ba);
+        if (!c.update(elem)) return false;
         arqCestos.seek(enderecoCesto);
         arqCestos.write(c.toByteArray());
         return true;
-
     }
-
-    public synchronized boolean delete(T elem) throws Exception {
-        byte[] bd = new byte[(int) arqDiretorio.length()];
-        arqDiretorio.seek(0);
+    
+    public synchronized boolean delete(int chave) throws Exception {
+        byte[] bd = new byte[(int) (arqDiretorio.length() - TAMANHO_CABECALHO_ID)];
+        arqDiretorio.seek(TAMANHO_CABECALHO_ID);
         arqDiretorio.read(bd);
         diretorio = new Diretorio();
         diretorio.fromByteArray(bd);
-
-        int i = diretorio.hash(elem.hashCode());
+        int i = diretorio.hash(chave);
         long enderecoCesto = diretorio.endereço(i);
+        if (enderecoCesto == -1) return false;
         Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
         byte[] ba = new byte[c.size()];
         arqCestos.seek(enderecoCesto);
         arqCestos.read(ba);
         c.fromByteArray(ba);
-
+        if (!c.delete(chave)) return false;
+        arqCestos.seek(enderecoCesto);
+        arqCestos.write(c.toByteArray());
+        return true;
+    }
+    
+    public synchronized boolean delete(T elem) throws Exception {
+        byte[] bd = new byte[(int) (arqDiretorio.length() - TAMANHO_CABECALHO_ID)];
+        arqDiretorio.seek(TAMANHO_CABECALHO_ID);
+        arqDiretorio.read(bd);
+        diretorio = new Diretorio();
+        diretorio.fromByteArray(bd);
+        int i = diretorio.hash(elem.hashCode());
+        long enderecoCesto = diretorio.endereço(i);
+        if (enderecoCesto == -1) return false;
+        Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
+        byte[] ba = new byte[c.size()];
+        arqCestos.seek(enderecoCesto);
+        arqCestos.read(ba);
+        c.fromByteArray(ba);
         boolean deleted = false;
         for (int j = 0; j < c.quantidade; j++) {
-            if (c.elementos.get(j).equals(elem)) { 
+            if (c.elementos.get(j).equals(elem)) {
                 c.elementos.remove(j);
                 c.quantidade--;
                 deleted = true;
                 break;
             }
         }
-
-        if (!deleted) {
-            return false;
-        }
-
+        if (!deleted) return false;
         arqCestos.seek(enderecoCesto);
         arqCestos.write(c.toByteArray());
         return true;
@@ -469,17 +378,16 @@ public class HashExtensivel<T extends RegistroHash<T>> {
 
     public void print() {
         try {
-            byte[] bd = new byte[(int) arqDiretorio.length()];
-            arqDiretorio.seek(0);
+            byte[] bd = new byte[(int) (arqDiretorio.length() - TAMANHO_CABECALHO_ID)];
+            arqDiretorio.seek(TAMANHO_CABECALHO_ID);
             arqDiretorio.read(bd);
             diretorio = new Diretorio();
             diretorio.fromByteArray(bd);
             System.out.println("\nDIRETÓRIO ------------------");
             System.out.println(diretorio);
-
             System.out.println("\nCESTOS ---------------------");
             arqCestos.seek(0);
-            while (arqCestos.getFilePointer() != arqCestos.length()) {
+            while (arqCestos.getFilePointer() < arqCestos.length()) {
                 System.out.println("Endereço: " + arqCestos.getFilePointer());
                 Cesto c = new Cesto(construtor, quantidadeDadosPorCesto);
                 byte[] ba = new byte[c.size()];
