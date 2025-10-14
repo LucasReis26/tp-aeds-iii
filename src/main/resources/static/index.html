@@ -18,7 +18,6 @@
     </style>
 </head>
 <body>
-
     <h1>Painel de Testes - API de Gerenciamento de Filmes</h1>
 
     <div class="grid-container">
@@ -46,28 +45,63 @@
         </div>
 
         <!-- Coluna de Filmes -->
-        <div class="entity-column">
-            <h2>Filmes</h2>
-            <div class="operation">
-                <h3>Criar Filme</h3>
-                <input id="filme-title" placeholder="Título">
-                <input id="filme-releaseDate" type="date" placeholder="Data de Lançamento">
-                <input id="filme-score" type="number" placeholder="Score (0-100)">
-                <input id="filme-duration" type="number" placeholder="Duração (minutos)">
-                <input id="filme-rating" type="number" placeholder="Classificação Indicativa">
-                <input id="filme-directors" placeholder="Diretores (separados por vírgula)">
-                <input id="filme-actors" placeholder="Atores (separados por vírgula)">
-                <button onclick="criarFilme()">Criar</button>
-                <pre id="filme-create-result"></pre>
-            </div>
-            <div class="operation">
-                <h3>Buscar/Excluir Filme por ID</h3>
-                <input id="filme-id" type="number" placeholder="ID do Filme">
-                <button onclick="handleApiCall('filme-id-result', 'GET', `/filmes/${getValue('filme-id')}`)">Buscar</button>
-                <button onclick="handleApiCall('filme-id-result', 'DELETE', `/filmes/${getValue('filme-id')}`)">Excluir</button>
-                <pre id="filme-id-result"></pre>
-            </div>
+    <div class="entity-column">
+        <h2>Filmes</h2>
+        
+        <!-- Operação: Listar Todos os Filmes -->
+        <div class="operation">
+            <h3>Listar Todos os Filmes</h3>
+            <button onclick="handleApiCall('filme-list-all-result', 'GET', '/filmes')">Listar Todos</button>
+            <pre id="filme-list-all-result"></pre>
         </div>
+
+        <!-- Operação: Buscar por Título -->
+        <div class="operation">
+            <h3>Buscar Filmes por Título</h3>
+            <input id="filme-search-title" placeholder="Título ou parte do título">
+            <button onclick="buscarFilmesPorTitulo()">Buscar por Título</button>
+            <pre id="filme-search-result"></pre>
+        </div>
+
+        <!-- Operação: Criar Filme (Já Existente) -->
+        <div class="operation">
+            <h3>Criar Filme</h3>
+            <input id="filme-title" placeholder="Título">
+            <input id="filme-releaseDate" type="date" placeholder="Data de Lançamento">
+            <input id="filme-score" type="number" placeholder="Score (0-100)">
+            <input id="filme-duration" type="number" placeholder="Duração (minutos)">
+            <input id="filme-rating" type="number" placeholder="Classificação Indicativa">
+            <input id="filme-directors" placeholder="Diretores (separados por vírgula)">
+            <input id="filme-actors" placeholder="Atores (separados por vírgula)">
+            <button onclick="criarFilme()">Criar</button>
+            <pre id="filme-create-result"></pre>
+        </div>
+
+        <!-- Operação: Buscar/Atualizar/Excluir por ID -->
+        <div class="operation">
+            <h3>Buscar/Atualizar/Excluir Filme por ID</h3>
+            <input id="filme-id" type="number" placeholder="ID do Filme">
+            <button onclick="handleApiCall('filme-id-result', 'GET', `/filmes/${getValue('filme-id')}`)">Buscar por ID</button>
+            <button onclick="carregarFilmeParaAtualizar()">Carregar para Atualizar</button>
+            <pre id="filme-id-result"></pre>
+        </div>
+
+        <!-- Operação: Atualizar Filme -->
+        <div class="operation">
+            <h3>Atualizar Filme</h3>
+            <input id="filme-update-id" type="number" placeholder="ID do Filme (para atualizar)" readonly>
+            <input id="filme-update-title" placeholder="Novo Título">
+            <input id="filme-update-releaseDate" type="date" placeholder="Nova Data de Lançamento">
+            <input id="filme-update-score" type="number" placeholder="Novo Score (0-100)">
+            <input id="filme-update-duration" type="number" placeholder="Nova Duração (minutos)">
+            <input id="filme-update-rating" type="number" placeholder="Nova Classificação Indicativa">
+            <input id="filme-update-directors" placeholder="Novos Diretores (separados por vírgula)">
+            <input id="filme-update-actors" placeholder="Novos Atores (separados por vírgula)">
+            <button onclick="atualizarFilme()">Atualizar Filme</button>
+            <button onclick="handleApiCall('filme-update-result', 'DELETE', `/filmes/${getValue('filme-update-id')}`)">Excluir Filme</button>
+            <pre id="filme-update-result"></pre>
+        </div>
+    </div>
 
         <!-- Coluna de Reviews -->
         <div class="entity-column">
@@ -177,6 +211,68 @@
                 resultDiv.textContent = `Falha:\n${error.toString()}`;
             }
         }
+
+        function buscarFilmesPorTitulo() {
+    const titulo = getValue('filme-search-title');
+    if (!titulo) {
+        document.getElementById('filme-search-result').textContent = 'Por favor, digite um título para buscar';
+        return;
+    }
+    handleApiCall('filme-search-result', 'GET', `/filmes/buscar?titulo=${encodeURIComponent(titulo)}`);
+}
+
+    
+    async function carregarFilmeParaAtualizar() {
+        const filmeId = getValue('filme-id');
+        if (!filmeId) {
+            document.getElementById('filme-id-result').textContent = 'Por favor, digite um ID para carregar';
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/filmes/${filmeId}`);
+            if (!response.ok) {
+                throw new Error(`Erro ${response.status}: ${await response.text()}`);
+            }
+            
+            const filme = await response.json();
+            
+          
+            document.getElementById('filme-update-id').value = filme.id;
+            document.getElementById('filme-update-title').value = filme.title || '';
+            document.getElementById('filme-update-releaseDate').value = filme.releaseDate || '';
+            document.getElementById('filme-update-score').value = filme.score || '';
+            document.getElementById('filme-update-duration').value = filme.duration || '';
+            document.getElementById('filme-update-rating').value = filme.rating || '';
+            document.getElementById('filme-update-directors').value = Array.isArray(filme.directors) ? filme.directors.join(', ') : '';
+            document.getElementById('filme-update-actors').value = Array.isArray(filme.actors) ? filme.actors.join(', ') : '';
+            
+            document.getElementById('filme-id-result').textContent = `Filme carregado para atualização!\n\n${JSON.stringify(filme, null, 2)}`;
+        } catch (error) {
+            document.getElementById('filme-id-result').textContent = `Falha ao carregar filme:\n${error.toString()}`;
+        }
+    }
+
+   
+    function atualizarFilme() {
+        const filmeId = getValue('filme-update-id');
+        if (!filmeId) {
+            document.getElementById('filme-update-result').textContent = 'Por favor, carregue um filme primeiro';
+            return;
+        }
+
+        const body = {
+            title: getValue('filme-update-title'),
+            releaseDate: getValue('filme-update-releaseDate'),
+            score: parseInt(getValue('filme-update-score')) || 0,
+            duration: parseInt(getValue('filme-update-duration')) || 0,
+            rating: parseInt(getValue('filme-update-rating')) || 0,
+            directors: getValue('filme-update-directors').split(',').map(s => s.trim()).filter(Boolean),
+            actors: getValue('filme-update-actors').split(',').map(s => s.trim()).filter(Boolean)
+        };
+        
+        handleApiCall('filme-update-result', 'PUT', `/filmes/${filmeId}`, body);
+    }
 
         function criarFilme() {
             const body = {

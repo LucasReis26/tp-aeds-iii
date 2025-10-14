@@ -88,12 +88,14 @@ public class Filme implements Registro, RegistroHash<Filme> {
     }
 
     public Filme() {
+        this.id = -1;  
         this.directors = new ArrayList<>();
         this.actors = new ArrayList<>();
     }
 
     public Filme(int score, String title, LocalDate releaseDate, ArrayList<String> directors, ArrayList<String> actors,
             int rating, long duration) {
+        this.id = -1; 
         this.score = score;
         this.title = title;
         this.releaseDate = releaseDate;

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import java.net.URI;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/filmes")
 @Tag(name = "Filmes", description = "Endpoints para o gerenciamento de filmes")
@@ -25,39 +24,48 @@ public class FilmeController {
         this.filmeService = filmeService;
     }
 
+    @Operation(summary = "Lista todos os filmes cadastrados")
+    @GetMapping
+    public ResponseEntity<?> getAllFilmes() {
+        try {
+            List<Filme> filmes = filmeService.listarTodos();
+            return ResponseEntity.ok(filmes);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
     @Operation(summary = "Busca um filme pelo seu ID único")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Filme encontrado com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Filme não encontrado")
-    })
     @GetMapping("/{id}")
     public ResponseEntity<?> getFilmeById(@PathVariable int id) {
         try {
             Filme filme = filmeService.buscarPorId(id);
-            return filme != null ? ResponseEntity.ok(filme) : ResponseEntity.notFound().build();
+            return ResponseEntity.ok(filme);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(e.getMessage());
+            if (e.getMessage().contains("não encontrado")) {
+                return ResponseEntity.status(404).body(e.getMessage());
+            } else {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
         }
     }
 
     @Operation(summary = "Busca filmes cujo título contenha um determinado termo")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Busca realizada com sucesso (pode retornar uma lista vazia)")
-    })
     @GetMapping("/buscar")
     public ResponseEntity<?> searchFilmesByTitle(@RequestParam String titulo) {
         try {
             List<Filme> filmes = filmeService.buscarPorTitulo(titulo);
             return ResponseEntity.ok(filmes);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(e.getMessage());
+            if (e.getMessage().contains("Nenhum filme encontrado")) {
+                return ResponseEntity.status(404).body(e.getMessage());
+            } else {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
         }
     }
 
     @Operation(summary = "Cria um novo filme no sistema")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Filme criado com sucesso")
-    })
     @PostMapping
     public ResponseEntity<?> createFilme(@RequestBody Filme filme) {
         try {
@@ -65,21 +73,38 @@ public class FilmeController {
             filme.setId(novoId);
             return ResponseEntity.created(URI.create("/api/filmes/" + novoId)).body(filme);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Atualiza um filme existente")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateFilme(@PathVariable int id, @RequestBody Filme filme) {
+        try {
+            filme.setId(id);
+            filmeService.atualizarFilme(filme);
+            return ResponseEntity.ok(filme);
+        } catch (Exception e) {
+            if (e.getMessage().contains("não encontrado")) {
+                return ResponseEntity.status(404).body(e.getMessage());
+            } else {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
         }
     }
     
     @Operation(summary = "Exclui um filme pelo seu ID")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Filme excluído com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Filme não encontrado para exclusão")
-    })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFilme(@PathVariable int id) {
+    public ResponseEntity<?> deleteFilme(@PathVariable int id) {
         try {
-            return filmeService.deletarFilme(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+            filmeService.deletarFilme(id);
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            if (e.getMessage().contains("não encontrado")) {
+                return ResponseEntity.status(404).body(e.getMessage());
+            } else {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
         }
     }
 }
