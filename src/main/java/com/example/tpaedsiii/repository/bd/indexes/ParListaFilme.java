@@ -16,13 +16,12 @@ public class ParListaFilme implements RegistroHash<ParListaFilme> {
 
     @Override public int size() { return SIZE; }
 
- 
     @Override
     public void setId(int id) {
+        // Não faz nada. O corpo está intencionalmente vazio.
     }
 
-    @Override
-    public int hashCode() { return this.listaId; }
+    @Override public int hashCode() { return this.listaId; }
 
     @Override
     public boolean equals(Object o) {
@@ -33,7 +32,7 @@ public class ParListaFilme implements RegistroHash<ParListaFilme> {
     }
     
     @Override
-    public byte[] toByteArray() throws IOException {
+    public byte[] toByteArray() throws IOException { 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         dos.writeInt(this.listaId);
@@ -41,7 +40,7 @@ public class ParListaFilme implements RegistroHash<ParListaFilme> {
         return baos.toByteArray();
     }
     @Override
-    public void fromByteArray(byte[] ba) throws IOException {
+    public void fromByteArray(byte[] ba) throws IOException { 
         ByteArrayInputStream bais = new ByteArrayInputStream(ba);
         DataInputStream dis = new DataInputStream(bais);
         this.listaId = dis.readInt();
