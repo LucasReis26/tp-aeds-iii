@@ -35,13 +35,28 @@ public class ListaService {
         }
         listaRepository.adicionarFilmeEmLista(listaId, filmeId);
     }
-    
+
+    public Lista atualizarLista(int listaId, String novoNome) throws Exception {
+        Lista lista = listaRepository.buscarListaCompleta(listaId, filmeRepository);
+        if (lista == null) {
+            throw new Exception("Lista com ID " + listaId + " não encontrada.");
+        }
+        lista.setNome(novoNome);
+        if (!listaRepository.alterarLista(lista)) {
+            throw new Exception("Falha ao atualizar a lista.");
+        }
+        return lista;
+    }
+
     public boolean removerFilme(int listaId, int filmeId) throws Exception {
         return listaRepository.removerFilmeDaLista(listaId, filmeId);
     }
 
     public List<Lista> buscarPorUsuario(int userId) throws Exception {
         return listaRepository.buscarListasPorUsuario(userId, filmeRepository);
+    }
+    public List<Lista> buscarTodas() throws Exception {
+        return listaRepository.buscarTodasListas(filmeRepository);
     }
 
     public boolean deletarLista(int listaId) throws Exception {

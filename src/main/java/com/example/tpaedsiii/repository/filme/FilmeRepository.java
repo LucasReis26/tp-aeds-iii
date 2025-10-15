@@ -16,9 +16,7 @@ import java.util.ArrayList;
 public class FilmeRepository {
 
     private HashExtensivel<Filme> hashFilmes;
-    
     private ArvoreBMais<ParStringInt> idxTituloFilme;
-
     private ArvoreBMais<ParIntInt> idxScoreFilme;
 
     public FilmeRepository() {
@@ -124,6 +122,10 @@ public class FilmeRepository {
         }
         
         return resultados;
+    }
+
+    public List<Filme> readAll() throws Exception {
+        return hashFilmes.readAll();
     }
 }
 

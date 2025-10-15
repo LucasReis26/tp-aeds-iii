@@ -39,6 +39,31 @@ public class ReviewController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @Operation(summary = "Atualiza uma review existente pelo seu ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> atualizarReview(@PathVariable int id, @RequestBody Review review) {
+        try {
+            review.setId(id); // Garante que o ID do path seja usado
+            if (reviewService.atualizarReview(review)) {
+                return ResponseEntity.ok().body(review);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Lista todas as reviews cadastradas no sistema")
+    @GetMapping
+    public ResponseEntity<?> listarTodasReviews() {
+        try {
+            List<Review> reviews = reviewService.listarTodasReviews();
+            return ResponseEntity.ok(reviews);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
 
     @Operation(summary = "Busca todas as reviews feitas por um usuário específico")
     @ApiResponses(value = {

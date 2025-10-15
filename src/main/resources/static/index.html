@@ -26,6 +26,7 @@
         <!-- Coluna de Usuários -->
         <div class="entity-column">
             <h2>Usuários</h2>
+
             <div class="operation">
                 <h3>Criar Usuário</h3>
                 <input id="user-username" placeholder="Nome de usuário">
@@ -34,6 +35,7 @@
                 <button onclick="handleApiCall('user-result', 'POST', '/users', { username: getValue('user-username'), description: getValue('user-description'), password: getValue('user-password') })">Criar</button>
                 <pre id="user-result"></pre>
             </div>
+
             <div class="operation">
                 <h3>Buscar/Alterar/Excluir Usuário</h3>
                 <input id="user-id" type="number" placeholder="ID do Usuário">
@@ -43,11 +45,21 @@
                 <button onclick="handleApiCall('user-id-result', 'DELETE', `/users/${getValue('user-id')}`)">Excluir</button>
                 <pre id="user-id-result"></pre>
             </div>
+
+            <!--Listar Todos os Usuários -->
+            <div class="operation">
+                <h3>Listar Todos os Usuários</h3>
+                <button onclick="handleApiCall('user-list-result', 'GET', '/users')">Listar Todos</button>
+                <pre id="user-list-result"></pre>
+            </div>
         </div>
+
 
         <!-- Coluna de Filmes -->
         <div class="entity-column">
             <h2>Filmes</h2>
+
+            <!-- Criar Filme -->
             <div class="operation">
                 <h3>Criar Filme</h3>
                 <input id="filme-title" placeholder="Título">
@@ -60,6 +72,8 @@
                 <button onclick="criarFilme()">Criar</button>
                 <pre id="filme-create-result"></pre>
             </div>
+
+            <!-- Buscar/Excluir Filme -->
             <div class="operation">
                 <h3>Buscar/Excluir Filme por ID</h3>
                 <input id="filme-id" type="number" placeholder="ID do Filme">
@@ -67,7 +81,30 @@
                 <button onclick="handleApiCall('filme-id-result', 'DELETE', `/filmes/${getValue('filme-id')}`)">Excluir</button>
                 <pre id="filme-id-result"></pre>
             </div>
+
+            <!-- Atualizar Filme -->
+            <div class="operation">
+                <h3>Atualizar Filme</h3>
+                <input id="filme-update-id" type="number" placeholder="ID do Filme">
+                <input id="filme-update-title" placeholder="Novo Título">
+                <input id="filme-update-releaseDate" type="date" placeholder="Nova Data de Lançamento">
+                <input id="filme-update-score" type="number" placeholder="Novo Score (0-100)">
+                <input id="filme-update-duration" type="number" placeholder="Nova Duração (minutos)">
+                <input id="filme-update-rating" type="number" placeholder="Nova Classificação Indicativa">
+                <input id="filme-update-directors" placeholder="Novos Diretores (separados por vírgula)">
+                <input id="filme-update-actors" placeholder="Novos Atores (separados por vírgula)">
+                <button onclick="atualizarFilme()">Atualizar</button>
+                <pre id="filme-update-result"></pre>
+            </div>
+
+            <!-- Listar Todos os Filmes -->
+            <div class="operation">
+                <h3>Listar Todos os Filmes</h3>
+                <button onclick="handleApiCall('filme-listar-result', 'GET', '/filmes')">Listar Todos</button>
+                <pre id="filme-listar-result"></pre>
+            </div>
         </div>
+
 
         <!-- Coluna de Reviews -->
         <div class="entity-column">
@@ -96,6 +133,22 @@
                 <button onclick="handleApiCall('review-search-result', 'GET', `/reviews/filme/${getValue('review-search-filmeId')}`)">Buscar por Filme</button>
                 <pre id="review-search-result"></pre>
             </div>
+            <div class="operation">
+                <h3>Atualizar Review</h3>
+                <input id="review-update-id" type="number" placeholder="ID da Review">
+                <input id="review-update-userId" type="number" placeholder="ID do Usuário">
+                <input id="review-update-nota" type="number" step="0.1" placeholder="Nova Nota (0-10)">
+                <input id="review-update-comentario" placeholder="Novo Comentário">
+                <button onclick="handleApiCall('review-update-result', 'PUT', `/reviews/${getValue('review-update-id')}`, { userId: parseInt(getValue('review-update-userId')), nota: parseFloat(getValue('review-update-nota')), comentario: getValue('review-update-comentario') })">
+                    Atualizar Review
+                </button>
+                <pre id="review-update-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Listar Todas as Reviews</h3>
+                <button onclick="handleApiCall('review-all-result', 'GET', '/reviews')">Listar Todas</button>
+                <pre id="review-all-result"></pre>
+            </div>
         </div>
 
         <!-- Coluna de Listas -->
@@ -123,6 +176,18 @@
                 <input id="lista-id-del" type="number" placeholder="ID da Lista">
                 <button onclick="handleApiCall('lista-del-result', 'DELETE', `/listas/${getValue('lista-id-del')}`)">Excluir Lista</button>
                 <pre id="lista-del-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Atualizar Lista</h3>
+                <input id="lista-update-id" type="number" placeholder="ID da Lista">
+                <input id="lista-update-nome" placeholder="Novo Nome da Lista">
+                <button onclick="handleApiCall('lista-update-result', 'PUT', `/listas/${getValue('lista-update-id')}`, { nome: getValue('lista-update-nome') })">Atualizar Lista</button>
+                <pre id="lista-update-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Listar Todas as Listas</h3>
+                <button onclick="handleApiCall('lista-all-result', 'GET', '/listas')">Listar Todas</button>
+                <pre id="lista-all-result"></pre>
             </div>
         </div>
     </div>
@@ -190,6 +255,26 @@
             };
             handleApiCall('filme-create-result', 'POST', '/filmes', body);
         }
+        function atualizarFilme() {
+    const id = getValue('filme-update-id');
+    if (!id) {
+        alert("Informe o ID do filme que deseja atualizar!");
+        return;
+    }
+
+    const body = {
+        title: getValue('filme-update-title'),
+        releaseDate: getValue('filme-update-releaseDate'),
+        score: parseInt(getValue('filme-update-score')),
+        duration: parseInt(getValue('filme-update-duration')),
+        rating: parseInt(getValue('filme-update-rating')),
+        directors: getValue('filme-update-directors').split(',').map(s => s.trim()).filter(Boolean),
+        actors: getValue('filme-update-actors').split(',').map(s => s.trim()).filter(Boolean)
+    };
+
+    handleApiCall('filme-update-result', 'PUT', `/filmes/${id}`, body);
+}
+
     </script>
 </body>
 </html>

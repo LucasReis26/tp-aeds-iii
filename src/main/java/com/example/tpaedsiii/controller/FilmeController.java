@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
+
 import java.net.URI;
 import java.util.List;
 
@@ -39,6 +39,7 @@ public class FilmeController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
+    
 
     @Operation(summary = "Busca filmes cujo título contenha um determinado termo")
     @ApiResponses(value = {
@@ -82,4 +83,46 @@ public class FilmeController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @Operation(summary = "Atualiza os dados de um filme existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Filme atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Filme não encontrado para atualização")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateFilme(@PathVariable int id, @RequestBody Filme filme) {
+        try {
+            Filme existente = filmeService.buscarPorId(id);
+            if (existente == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Mantém o mesmo ID e atualiza os demais campos
+            filme.setId(id);
+            boolean atualizado = filmeService.atualizarFilme(filme);
+
+            if (atualizado) {
+                return ResponseEntity.ok(filme);
+            } else {
+                return ResponseEntity.internalServerError().body("Erro ao atualizar o filme.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Lista todos os filmes cadastrados")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de filmes retornada com sucesso")
+    })
+    @GetMapping
+    public ResponseEntity<?> listarFilmes() {
+        try {
+            List<Filme> filmes = filmeService.listarTodos();
+            return ResponseEntity.ok(filmes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
 }
