@@ -103,7 +103,17 @@ public class ListaController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
-    
+    @Operation(summary = "Lista todas as listas do banco, incluindo filmes")
+    @GetMapping
+    public ResponseEntity<?> getAllLists() {
+        try {
+            List<Lista> listas = listaService.buscarTodas();
+            return ResponseEntity.ok(listas);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
     @Operation(summary = "Exclui uma lista pelo seu ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteList(@PathVariable int id) {

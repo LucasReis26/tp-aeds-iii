@@ -169,6 +169,11 @@
                 <button onclick="handleApiCall('lista-del-result', 'DELETE', `/listas/${getValue('lista-id-del')}`)">Excluir Lista</button>
                 <pre id="lista-del-result"></pre>
             </div>
+            <div class="operation">
+                <h3>Listar Todas as Listas</h3>
+                <button onclick="handleApiCall('lista-all-result', 'GET', '/listas')">Listar Todas</button>
+                <pre id="lista-all-result"></pre>
+            </div>
         </div>
     </div>
 

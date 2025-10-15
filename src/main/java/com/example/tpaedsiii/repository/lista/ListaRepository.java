@@ -90,6 +90,14 @@ public class ListaRepository {
         }
         return listas;
     }
+    public List<Lista> buscarTodasListas(FilmeRepository filmeDAO) throws Exception {
+        List<Lista> todasListas = arqListas.readAll();
+        for (int i = 0; i < todasListas.size(); i++) {
+            Lista lista = todasListas.get(i);
+            buscarListaCompleta(lista.getId(), filmeDAO);
+        }
+        return todasListas;
+    }
 
     public Lista buscarListaPorNomeEUsuario(String nome, int userId, FilmeRepository filmeDAO) throws Exception {
         List<Lista> listasDoUsuario = buscarListasPorUsuario(userId, filmeDAO);

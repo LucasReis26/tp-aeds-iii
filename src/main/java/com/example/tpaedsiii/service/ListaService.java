@@ -55,6 +55,9 @@ public class ListaService {
     public List<Lista> buscarPorUsuario(int userId) throws Exception {
         return listaRepository.buscarListasPorUsuario(userId, filmeRepository);
     }
+    public List<Lista> buscarTodas() throws Exception {
+        return listaRepository.buscarTodasListas(filmeRepository);
+    }
 
     public boolean deletarLista(int listaId) throws Exception {
         // Lógica Futura: Remover todas as relações ParListaFilme antes de deletar a lista.
