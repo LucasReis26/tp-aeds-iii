@@ -29,6 +29,24 @@ public class ReviewService {
         }
         return reviewRepository.create(review);
     }
+    public boolean atualizarReview(Review review) throws Exception {
+        Review existente = reviewRepository.read(review.getId());
+        if (existente == null) {
+            throw new Exception("Review não encontrada");
+        }
+        // Apenas o usuário dono da review pode atualizar
+        if (existente.getUserId() != review.getUserId()) {
+            throw new Exception("Usuário não pode atualizar review de outro usuário");
+        }
+        // Atualiza nota e comentário (ou outros campos, se desejar)
+        existente.setNota(review.getNota());
+        existente.setComentario(review.getComentario());
+        return reviewRepository.update(existente);
+    }
+
+    public List<Review> listarTodasReviews() throws Exception {
+        return reviewRepository.listarTodasReviews();
+    }
 
     public List<Review> buscarPorUsuario(int userId) throws Exception {
         return reviewRepository.buscarAvaliacoesPorUsuario(userId);

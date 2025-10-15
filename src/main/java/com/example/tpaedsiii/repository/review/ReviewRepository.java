@@ -82,4 +82,10 @@ public class ReviewRepository {
         }
         return null;
     }
+
+    public List<Review> listarTodasReviews() throws Exception {
+        return hashReviews.readAll();
+    }
+
+
 }

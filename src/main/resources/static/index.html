@@ -134,13 +134,21 @@
                 <pre id="review-search-result"></pre>
             </div>
             <div class="operation">
-                <h3>Atualizar Lista</h3>
-                <input id="lista-update-id" type="number" placeholder="ID da Lista">
-                <input id="lista-update-nome" placeholder="Novo Nome da Lista">
-                <button onclick="handleApiCall('lista-update-result', 'PUT', `/listas/${getValue('lista-update-id')}`, { nome: getValue('lista-update-nome') })">Atualizar Lista</button>
-                <pre id="lista-update-result"></pre>
+                <h3>Atualizar Review</h3>
+                <input id="review-update-id" type="number" placeholder="ID da Review">
+                <input id="review-update-userId" type="number" placeholder="ID do Usuário">
+                <input id="review-update-nota" type="number" step="0.1" placeholder="Nova Nota (0-10)">
+                <input id="review-update-comentario" placeholder="Novo Comentário">
+                <button onclick="handleApiCall('review-update-result', 'PUT', `/reviews/${getValue('review-update-id')}`, { userId: parseInt(getValue('review-update-userId')), nota: parseFloat(getValue('review-update-nota')), comentario: getValue('review-update-comentario') })">
+                    Atualizar Review
+                </button>
+                <pre id="review-update-result"></pre>
             </div>
-
+            <div class="operation">
+                <h3>Listar Todas as Reviews</h3>
+                <button onclick="handleApiCall('review-all-result', 'GET', '/reviews')">Listar Todas</button>
+                <pre id="review-all-result"></pre>
+            </div>
         </div>
 
         <!-- Coluna de Listas -->
@@ -168,6 +176,13 @@
                 <input id="lista-id-del" type="number" placeholder="ID da Lista">
                 <button onclick="handleApiCall('lista-del-result', 'DELETE', `/listas/${getValue('lista-id-del')}`)">Excluir Lista</button>
                 <pre id="lista-del-result"></pre>
+            </div>
+            <div class="operation">
+                <h3>Atualizar Lista</h3>
+                <input id="lista-update-id" type="number" placeholder="ID da Lista">
+                <input id="lista-update-nome" placeholder="Novo Nome da Lista">
+                <button onclick="handleApiCall('lista-update-result', 'PUT', `/listas/${getValue('lista-update-id')}`, { nome: getValue('lista-update-nome') })">Atualizar Lista</button>
+                <pre id="lista-update-result"></pre>
             </div>
             <div class="operation">
                 <h3>Listar Todas as Listas</h3>
