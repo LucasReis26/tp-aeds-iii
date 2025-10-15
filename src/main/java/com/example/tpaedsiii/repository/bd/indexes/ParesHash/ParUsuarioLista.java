@@ -1,5 +1,4 @@
-package com.example.tpaedsiii.repository.bd.indexes;
-
+package com.example.tpaedsiii.repository.bd.indexes.ParesHash;
 import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash;
 import java.io.*;
 
@@ -13,7 +12,7 @@ public class ParUsuarioLista implements RegistroHash<ParUsuarioLista> {
     public int getUserId() { return userId; }
     public int getListaId() { return listaId; }
 
-    @Override public int size() { return SIZE; }
+    @Override public short size() { return SIZE; }
 
     @Override
     public void setId(int id) {

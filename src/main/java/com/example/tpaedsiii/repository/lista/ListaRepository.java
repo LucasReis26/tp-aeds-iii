@@ -1,4 +1,4 @@
-package com.example.tpaedsiii.repository;
+package com.example.tpaedsiii.repository.lista;
 
 import com.example.tpaedsiii.model.filme.Filme;
 import com.example.tpaedsiii.model.lista.Lista;
@@ -6,6 +6,7 @@ import com.example.tpaedsiii.repository.bd.indexes.base.ArvoreBMais;
 import com.example.tpaedsiii.repository.bd.indexes.ParesArvoreB.ParIntInt;
 import com.example.tpaedsiii.repository.bd.indexes.ParesHash.ParUsuarioLista;
 import com.example.tpaedsiii.repository.bd.indexes.base.HashExtensivel;
+import com.example.tpaedsiii.repository.filme.FilmeRepository;
 
 import org.springframework.stereotype.Repository;
 import jakarta.annotation.PostConstruct;
@@ -21,16 +22,9 @@ import java.util.List;
 @Repository
 public class ListaRepository {
 
-    // ARMAZENAMENTO PRIMÁRIO: Substituído por uma Árvore B+ para busca O(log n) por ID.
     private ArvoreBMais<Lista> arvoreListas;
-    
-    // ÍNDICE 1-N (User -> Lista): Mantido com Hash para acesso O(1).
     private HashExtensivel<ParUsuarioLista> idxUsuarioLista;
-    
-    // ÍNDICE N-M (Lista -> Filme): Substituído por Árvore B+ para permitir ordenação.
     private ArvoreBMais<ParIntInt> idxListaFilme;
-
-    // Ficheiro para gerir o auto-incremento de IDs para as Listas.
     private static final String ID_COUNTER_FILE = "data/lista_id_counter.db";
     
     private final FilmeRepository filmeRepository;
@@ -43,9 +37,9 @@ public class ListaRepository {
     public void init() throws Exception {
         new File("data").mkdirs();
         
-        arvoreListas = new ArvoreBMais<>(Lista.class.getConstructor(), 5, "data/Listas_bplus.db");
+        arvoreListas = new ArvoreBMais<Lista>(Lista.class.getConstructor(), 5, "data/Listas_bplus.db");
         idxUsuarioLista = new HashExtensivel<>(ParUsuarioLista.class.getConstructor(), 10, "data/idx_user_lista_d.db", "data/idx_user_lista_c.db");
-        idxListaFilme = new ArvoreBMais<>(ParIntInt.class.getConstructor(), 20, "data/idx_lista_filme_bplus.db");
+        idxListaFilme = new ArvoreBMais<ParIntInt>(ParIntInt.class.getConstructor(), 20, "data/idx_lista_filme_bplus.db");
     }
 
     private synchronized int getNextId() throws Exception {
@@ -85,26 +79,17 @@ public class ListaRepository {
     }
 
     public boolean alterarLista(Lista lista) throws Exception {
-        // A Árvore B+ não tem um método update direto, a operação é uma remoção seguida de uma inserção.
-        // Por simplicidade, assumimos que o método update da árvore existe.
+ 
         return arvoreListas.update(lista);
     }
 
     public boolean excluirLista(int listaId) throws Exception {
         Lista listaParaExcluir = buscarLista(listaId);
         if (listaParaExcluir == null) return false;
-        
-        // Lógica de exclusão complexa:
-        // 1. Remover de idxUsuarioLista.
-        // 2. Remover todas as entradas de idxListaFilme para esta lista.
-        // 3. Remover da arvoreListas.
         return arvoreListas.delete(listaParaExcluir);
     }
 
-    /**
-     * Busca os metadados de uma lista pelo ID.
-     * Agora utiliza a busca O(log n) da Árvore B+.
-     */
+
     private Lista buscarLista(int listaId) throws Exception {
         ArrayList<Lista> resultadoBusca = arvoreListas.read(new Lista(listaId, 0, "", false));
         return resultadoBusca.isEmpty() ? null : resultadoBusca.get(0);
@@ -113,12 +98,16 @@ public class ListaRepository {
     public Lista buscarListaCompleta(int listaId) throws Exception {
         Lista lista = buscarLista(listaId);
         if (lista != null) {
-            // A busca na árvore retorna os pares já ordenados por filmeId.
             ArrayList<ParIntInt> pares = idxListaFilme.read(new ParIntInt(listaId, 0));
             ArrayList<Filme> filmes = new ArrayList<>();
             for (ParIntInt par : pares) {
                 if (par.getChave() == listaId) {
-                    Filme f = filmeRepository.buscarFilme(par.getValor());
+                    Filme f = null;
+                    try {
+                        f = filmeRepository.buscarFilme(par.getValor());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     if (f != null) {
                         filmes.add(f);
                     }

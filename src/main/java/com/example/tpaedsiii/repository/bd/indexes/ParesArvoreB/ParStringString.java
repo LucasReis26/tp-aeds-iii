@@ -36,9 +36,8 @@ public class ParStringString implements RegistroArvoreBMais<ParStringString>{
     }
 
     @Override
-      @Override
     public byte[] toByteArray() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(TAMANHO_REGISTO);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(TAMANHO_Registro);
         DataOutputStream dos = new DataOutputStream(baos);
 
         // Escreve a primeira string
@@ -65,30 +64,33 @@ public class ParStringString implements RegistroArvoreBMais<ParStringString>{
     }
 
     
+    
     @Override
     public void fromByteArray(byte[] ba) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(ba);
         DataInputStream dis = new DataInputStream(bais);
 
-        byte[] stringBytes = new byte[TAMANHO_STRING];
-        dis.read(stringBytes);
+        byte[] stringBytes1 = new byte[TAMANHO_STRING];
+        dis.read(stringBytes1);
 
-        
         byte[] stringBytes2 = new byte[TAMANHO_STRING];
         dis.read(stringBytes2);
         
-        int len = 0;
-        while (len < stringBytes.length && stringBytes[len] != 0) {
-            len++;
+        // Reconstrói a primeira string
+        int len1 = 0;
+        while (len1 < stringBytes1.length && stringBytes1[len1] != 0) {
+            len1++;
         }
-        this.string1 = new String(stringBytes, 0, len, StandardCharsets.UTF_8);
+        this.string1 = new String(stringBytes1, 0, len1, StandardCharsets.UTF_8);
 
+        // Reconstrói a segunda string
         int len2 = 0;
         while (len2 < stringBytes2.length && stringBytes2[len2] != 0) {
             len2++;
         }
         this.string2 = new String(stringBytes2, 0, len2, StandardCharsets.UTF_8);
     }
+
 
     @Override
      public int compareTo(ParStringString obj) {
@@ -98,6 +100,7 @@ public class ParStringString implements RegistroArvoreBMais<ParStringString>{
         }
         return this.string2.compareTo(obj.string2);
     }
+
     @Override
     public String toString() {
         return "Idx['" + string1 + "'=>" + string2 + "]";

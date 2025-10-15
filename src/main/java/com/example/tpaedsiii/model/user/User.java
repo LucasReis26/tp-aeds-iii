@@ -31,7 +31,7 @@ public class User implements Registro, RegistroHash<User> {
     public void setPassword(String password) { this.password = password; }
     
     @Override public int hashCode() { return this.id; }
-    @Override public int size() { return TAMANHO_FIXO_HASH; }
+    @Override public short size() { return TAMANHO_FIXO_HASH; }
 
     @Override
     public byte[] toByteArray() throws IOException{

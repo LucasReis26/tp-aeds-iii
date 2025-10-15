@@ -4,9 +4,10 @@ import com.example.tpaedsiii.repository.bd.indexes.base.HashExtensivel;
 
 import jakarta.annotation.PostConstruct;
 
-import com.example.tpaedsiii.repository.bd.indexes.ParUsuarioReview;
+import com.example.tpaedsiii.repository.bd.indexes.ParesHash.ParFilmeReview;
+import com.example.tpaedsiii.repository.bd.indexes.ParesHash.ParUsuarioReview;
 import com.example.tpaedsiii.model.review.Review;
-import com.example.tpaedsiii.repository.bd.indexes.ParFilmeReview;
+
 import java.util.ArrayList;
 import java.util.List;
 
