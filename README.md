@@ -13,7 +13,7 @@
 
 Este projeto implementa um sistema completo de gerenciamento de filmes, usuários, avaliações e listas. O núcleo do sistema é um banco de dados de baixo nível construído em Java, utilizando **arquivos de acesso aleatório** para persistência.
 
-A performance para buscas é otimizada através de uma estrutura de dados de **Hash Extensível**, que serve como motor para indexação primária (por ID) e secundária (para as relações entre as entidades).
+A performance para buscas é otimizada através de uma estrutura de dados de **Hash Extensível**, que serve como motor para indexação primária (por ID) e uma **Árvore Binária B+** para a indexação secundária (para as relações entre as entidades).
 
 Toda a lógica do banco de dados é exposta através de uma **API RESTful**, construída com o framework Spring Boot. Para facilitar os testes e a demonstração, o projeto oferece duas interfaces de teste:
 
