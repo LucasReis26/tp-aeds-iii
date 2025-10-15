@@ -22,6 +22,21 @@ public class UserController {
         this.userService = userService;
     }
 
+
+    @Operation(summary = "Lista todos os usuários cadastrados no sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
+    })
+    @GetMapping
+    public ResponseEntity<?> listarTodosUsuarios() {
+        try {
+            return ResponseEntity.ok(userService.listarTodosUsuarios());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+
     @Operation(summary = "Busca um usuário pelo seu ID único")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso"),

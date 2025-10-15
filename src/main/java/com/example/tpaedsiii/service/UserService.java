@@ -2,6 +2,9 @@ package com.example.tpaedsiii.service;
 
 import com.example.tpaedsiii.model.user.User;
 import com.example.tpaedsiii.repository.user.UserRepository;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,6 +18,10 @@ public class UserService {
 
     public User buscarPorId(int id) throws Exception {
         return userRepository.buscarUser(id);
+    }
+    
+    public List<User> listarTodosUsuarios() throws Exception {
+        return userRepository.listarTodos();
     }
 
     public int criarUsuario(User user) throws Exception {
