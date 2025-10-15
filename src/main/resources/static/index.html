@@ -133,6 +133,14 @@
                 <button onclick="handleApiCall('review-search-result', 'GET', `/reviews/filme/${getValue('review-search-filmeId')}`)">Buscar por Filme</button>
                 <pre id="review-search-result"></pre>
             </div>
+            <div class="operation">
+                <h3>Atualizar Lista</h3>
+                <input id="lista-update-id" type="number" placeholder="ID da Lista">
+                <input id="lista-update-nome" placeholder="Novo Nome da Lista">
+                <button onclick="handleApiCall('lista-update-result', 'PUT', `/listas/${getValue('lista-update-id')}`, { nome: getValue('lista-update-nome') })">Atualizar Lista</button>
+                <pre id="lista-update-result"></pre>
+            </div>
+
         </div>
 
         <!-- Coluna de Listas -->

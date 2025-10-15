@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
+
 import java.net.URI;
 import java.util.List;
 
@@ -80,6 +80,18 @@ public class ListaController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
+
+    @Operation(summary = "Atualiza o nome de uma lista pelo seu ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateList(@PathVariable int id, @RequestBody Lista listaData) {
+        try {
+            Lista updatedList = listaService.atualizarLista(id, listaData.getNome());
+            return ResponseEntity.ok(updatedList);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
 
     @Operation(summary = "Busca todas as listas de um usuário, incluindo os filmes de cada uma")
     @GetMapping("/user/{userId}")
