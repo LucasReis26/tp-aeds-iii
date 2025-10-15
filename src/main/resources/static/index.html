@@ -48,6 +48,8 @@
         <!-- Coluna de Filmes -->
         <div class="entity-column">
             <h2>Filmes</h2>
+
+            <!-- Criar Filme -->
             <div class="operation">
                 <h3>Criar Filme</h3>
                 <input id="filme-title" placeholder="Título">
@@ -60,6 +62,8 @@
                 <button onclick="criarFilme()">Criar</button>
                 <pre id="filme-create-result"></pre>
             </div>
+
+            <!-- Buscar/Excluir Filme -->
             <div class="operation">
                 <h3>Buscar/Excluir Filme por ID</h3>
                 <input id="filme-id" type="number" placeholder="ID do Filme">
@@ -67,7 +71,30 @@
                 <button onclick="handleApiCall('filme-id-result', 'DELETE', `/filmes/${getValue('filme-id')}`)">Excluir</button>
                 <pre id="filme-id-result"></pre>
             </div>
+
+            <!-- Atualizar Filme -->
+            <div class="operation">
+                <h3>Atualizar Filme</h3>
+                <input id="filme-update-id" type="number" placeholder="ID do Filme">
+                <input id="filme-update-title" placeholder="Novo Título">
+                <input id="filme-update-releaseDate" type="date" placeholder="Nova Data de Lançamento">
+                <input id="filme-update-score" type="number" placeholder="Novo Score (0-100)">
+                <input id="filme-update-duration" type="number" placeholder="Nova Duração (minutos)">
+                <input id="filme-update-rating" type="number" placeholder="Nova Classificação Indicativa">
+                <input id="filme-update-directors" placeholder="Novos Diretores (separados por vírgula)">
+                <input id="filme-update-actors" placeholder="Novos Atores (separados por vírgula)">
+                <button onclick="atualizarFilme()">Atualizar</button>
+                <pre id="filme-update-result"></pre>
+            </div>
+
+            <!-- Listar Todos os Filmes -->
+            <div class="operation">
+                <h3>Listar Todos os Filmes</h3>
+                <button onclick="handleApiCall('filme-listar-result', 'GET', '/filmes')">Listar Todos</button>
+                <pre id="filme-listar-result"></pre>
+            </div>
         </div>
+
 
         <!-- Coluna de Reviews -->
         <div class="entity-column">
@@ -190,6 +217,26 @@
             };
             handleApiCall('filme-create-result', 'POST', '/filmes', body);
         }
+        function atualizarFilme() {
+        const id = getValue('filme-update-id');
+        if (!id) {
+            alert("Informe o ID do filme que deseja atualizar!");
+            return;
+        }
+
+        const body = {
+            title: getValue('filme-update-title'),
+            releaseDate: getValue('filme-update-releaseDate'),
+            score: parseInt(getValue('filme-update-score')),
+            duration: parseInt(getValue('filme-update-duration')),
+            rating: parseInt(getValue('filme-update-rating')),
+            directors: getValue('filme-update-directors').split(',').map(s => s.trim()).filter(Boolean),
+            actors: getValue('filme-update-actors').split(',').map(s => s.trim()).filter(Boolean)
+        };
+
+        handleApiCall('filme-update-result', 'PUT', `/filmes/${id}`, body);
+    }
+
     </script>
 </body>
 </html>

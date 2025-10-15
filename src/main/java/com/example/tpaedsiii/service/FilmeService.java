@@ -30,4 +30,13 @@ public class FilmeService {
         // Lógica de Negócio Futura: Antes de deletar um filme, remover de todas as listas e deletar suas reviews.
         return filmeRepository.excluirFilme(id);
     }
+
+    public boolean atualizarFilme(Filme filme) throws Exception {
+        return filmeRepository.alterarFilme(filme);
+    }
+
+    public List<Filme> listarTodos() throws Exception {
+        return filmeRepository.readAll();
+    }
+
 }
