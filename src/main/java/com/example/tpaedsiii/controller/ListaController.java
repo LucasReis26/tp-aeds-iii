@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class ListaController {
 
     private final ListaService listaService;
 
+    @Autowired
     public ListaController(ListaService listaService) {
         this.listaService = listaService;
     }
@@ -29,7 +31,7 @@ public class ListaController {
     @PostMapping("/user/{userId}/init-padrao")
     public ResponseEntity<?> initializeDefaultLists(@PathVariable int userId) {
         try {
-            listaService.criarListasPadrao(userId);
+            listaService.criarListasPadraoParaUsuario(userId);
             return ResponseEntity.ok().body("Listas padrão criadas/verificadas para o usuário " + userId);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(e.getMessage());
@@ -92,7 +94,6 @@ public class ListaController {
         }
     }
 
-
     @Operation(summary = "Busca todas as listas de um usuário, incluindo os filmes de cada uma")
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getListsByUser(@PathVariable int userId) {
@@ -103,7 +104,8 @@ public class ListaController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
-    @Operation(summary = "Lista todas as listas do banco, incluindo filmes")
+
+    @Operation(summary = "Lista todas as listas cadastradas no sistema")
     @GetMapping
     public ResponseEntity<?> getAllLists() {
         try {
@@ -124,3 +126,4 @@ public class ListaController {
         }
     }
 }
+

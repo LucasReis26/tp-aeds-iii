@@ -4,6 +4,7 @@ import com.example.tpaedsiii.model.review.Review;
 import com.example.tpaedsiii.repository.filme.FilmeRepository;
 import com.example.tpaedsiii.repository.review.ReviewRepository;
 import com.example.tpaedsiii.repository.user.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class ReviewService {
     }
 
     public int criarReview(Review review) throws Exception {
+        // Regra de Negócio: Garante que o usuário e o filme existem antes de criar a review.
         if (userRepository.buscarUser(review.getUserId()) == null) {
             throw new Exception("Usuário com ID " + review.getUserId() + " não existe.");
         }
@@ -29,20 +31,21 @@ public class ReviewService {
         }
         return reviewRepository.create(review);
     }
-    public boolean atualizarReview(Review review) throws Exception {
-        Review existente = reviewRepository.read(review.getId());
+    
+  
+    public boolean atualizarReview(int reviewId, int userId, float novaNota, String novoComentario) throws Exception {
+        Review existente = reviewRepository.read(reviewId);
         if (existente == null) {
-            throw new Exception("Review não encontrada");
+            throw new Exception("Review com ID " + reviewId + " não encontrada.");
         }
-        // Apenas o usuário dono da review pode atualizar
-        if (existente.getUserId() != review.getUserId()) {
-            throw new Exception("Usuário não pode atualizar review de outro usuário");
+        if (existente.getUserId() != userId) {
+            throw new Exception("Permissão negada. Usuário não é o dono desta review.");
         }
-        // Atualiza nota e comentário (ou outros campos, se desejar)
-        existente.setNota(review.getNota());
-        existente.setComentario(review.getComentario());
+        existente.setNota(novaNota);
+        existente.setComentario(novoComentario);
         return reviewRepository.update(existente);
     }
+
 
     public List<Review> listarTodasReviews() throws Exception {
         return reviewRepository.listarTodasReviews();
@@ -59,6 +62,4 @@ public class ReviewService {
     public boolean deletarReview(int id) throws Exception {
         return reviewRepository.delete(id);
     }
-
-    
 }

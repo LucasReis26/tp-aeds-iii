@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.tpaedsiii.repository.bd.indexes.ParesArvoreB.ParIntInt;
 
 import java.lang.reflect.Constructor;
 

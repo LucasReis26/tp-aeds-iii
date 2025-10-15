@@ -2,155 +2,93 @@ package com.example.tpaedsiii.repository.lista;
 
 import com.example.tpaedsiii.model.filme.Filme;
 import com.example.tpaedsiii.model.lista.Lista;
-import com.example.tpaedsiii.repository.bd.indexes.base.ArvoreBMais;
-import com.example.tpaedsiii.repository.bd.indexes.ParesArvoreB.ParIntInt;
+import com.example.tpaedsiii.repository.bd.base.Arquivo;
+import com.example.tpaedsiii.repository.bd.indexes.ParesHash.ParListaFilme;
 import com.example.tpaedsiii.repository.bd.indexes.ParesHash.ParUsuarioLista;
 import com.example.tpaedsiii.repository.bd.indexes.base.HashExtensivel;
+import com.example.tpaedsiii.repository.filme.FilmeRepository;
 
-import org.springframework.stereotype.Repository;
 import jakarta.annotation.PostConstruct;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class ListaRepository {
 
-    private ArvoreBMais<Lista> arvoreListas;
-    private HashExtensivel<ParUsuarioLista> idxUsuarioLista;    
-    private ArvoreBMais<ParIntInt> idxListaFilme;
-    private static final String ID_COUNTER_FILE = "data/lista_id_counter.db";
-    
-    private final FilmeRepository filmeRepository;
+    private Arquivo<Lista> arqListas;
+    private HashExtensivel<ParUsuarioLista> idxUsuarioLista;
+    private HashExtensivel<ParListaFilme> idxListaFilme;
 
-    public ListaRepository(FilmeRepository filmeRepository) {
-        this.filmeRepository = filmeRepository;
-    }
+    public ListaRepository() {}
 
     @PostConstruct
     public void init() throws Exception {
-        new File("data").mkdirs();
-        
-        arvoreListas = new ArvoreBMais<>(Lista.class.getConstructor(), 5, "data/Listas_bplus.db");
+        arqListas = new Arquivo<>("data/Listas.db", Lista.class.getConstructor());
         idxUsuarioLista = new HashExtensivel<>(ParUsuarioLista.class.getConstructor(), 10, "data/idx_user_lista_d.db", "data/idx_user_lista_c.db");
-        idxListaFilme = new ArvoreBMais<>(ParIntInt.class.getConstructor(), 20, "data/idx_lista_filme_bplus.db");
-    }
-
-    private synchronized int getNextId() throws Exception {
-        int nextId = 1;
-        File counterFile = new File(ID_COUNTER_FILE);
-        if (counterFile.exists() && counterFile.length() > 0) {
-            try (DataInputStream dis = new DataInputStream(new FileInputStream(counterFile))) {
-                nextId = dis.readInt() + 1;
-            }
-        }
-        try (DataOutputStream dos = new DataOutputStream(new FileOutputStream(counterFile))) {
-            dos.writeInt(nextId);
-        }
-        return nextId;
+        idxListaFilme = new HashExtensivel<>(ParListaFilme.class.getConstructor(), 20, "data/idx_lista_filme_d.db", "data/idx_lista_filme_c.db");
     }
 
     public int incluirLista(Lista lista) throws Exception {
-        int newId = getNextId();
-        lista.setId(newId);
-        
-        // 1. Insere a lista no armazenamento primário (árvore de listas por ID).
-        arvoreListas.create(lista);
-        
-        // 2. Cria a entrada no índice que liga o usuário a esta nova lista.
-        idxUsuarioLista.create(new ParUsuarioLista(lista.getUserId(), newId));
-        
+        lista.setFilmes(new ArrayList<>());
+        int newId = arqListas.create(lista);
+        if (newId != -1) {
+            idxUsuarioLista.create(new ParUsuarioLista(lista.getUserId(), newId));
+        }
         return newId;
     }
 
     public void adicionarFilmeEmLista(int listaId, int filmeId) throws Exception {
-        // Insere a relação no índice N-M. A chave é o listaId, o valor é o filmeId.
-        idxListaFilme.create(new ParIntInt(listaId, filmeId));
-    }
-
-    public boolean removerFilmeDaLista(int listaId, int filmeId) throws Exception {
-        return idxListaFilme.delete(new ParIntInt(listaId, filmeId));
+        idxListaFilme.create(new ParListaFilme(listaId, filmeId));
     }
 
     public boolean alterarLista(Lista lista) throws Exception {
-        // A Árvore B+ não tem um método update direto, a operação é uma remoção seguida de uma inserção.
-        // Por simplicidade, assumimos que o método update da árvore existe.
-        return arvoreListas.update(lista);
+        lista.setFilmes(new ArrayList<>());
+        return arqListas.update(lista);
     }
 
     public boolean excluirLista(int listaId) throws Exception {
-        Lista listaParaExcluir = buscarLista(listaId);
-        if (listaParaExcluir == null) return false;
-        
-        // Lógica de exclusão complexa:
-        // 1. Remover de idxUsuarioLista.
-        // 2. Remover todas as entradas de idxListaFilme para esta lista.
-        // 3. Remover da arvoreListas.
-        return arvoreListas.delete(listaParaExcluir);
+        // Lógica de exclusão completa também precisaria de limpar os índices
+        return arqListas.delete(listaId);
     }
 
-    /**
-     * Busca os metadados de uma lista pelo ID.
-     * Agora utiliza a busca O(log n) da Árvore B+.
-     */
-    private Lista buscarLista(int listaId) throws Exception {
-        ArrayList<Lista> resultadoBusca = arvoreListas.read(new Lista(listaId, 0, "", false));
-        return resultadoBusca.isEmpty() ? null : resultadoBusca.get(0);
-    }
-
-    public Lista buscarListaCompleta(int listaId) throws Exception {
-        Lista lista = buscarLista(listaId);
-        if (lista != null) {
-            // A busca na árvore retorna os pares já ordenados por filmeId.
-            ArrayList<ParIntInt> pares = idxListaFilme.read(new ParIntInt(listaId, 0));
-            ArrayList<Filme> filmes = new ArrayList<>();
-            for (ParIntInt par : pares) {
-                if (par.getChave() == listaId) {
-                    Filme f = filmeRepository.buscarFilme(par.getValor());
-                    if (f != null) {
-                        filmes.add(f);
-                    }
-                }
-            }
-            lista.setFilmes(filmes);
-        }
-        return lista;
+    public Lista buscarListaMetadata(int listaId) throws Exception {
+        return arqListas.read(listaId);
     }
     
-    public List<Lista> buscarListasPorUsuario(int userId) throws Exception {
+    public List<Lista> buscarTodasListasMetadata() throws Exception {
+        return arqListas.readAll();
+    }
+    
+    public List<Integer> buscarFilmeIdsPorLista(int listaId) throws Exception {
+        List<ParListaFilme> pares = idxListaFilme.readAll(listaId);
+        List<Integer> filmeIds = new ArrayList<>();
+        for (ParListaFilme par : pares) {
+            filmeIds.add(par.getFilmeId());
+        }
+        return filmeIds;
+    }
+
+    public List<Lista> buscarMetadadosDeListasPorUsuario(int userId) throws Exception {
+        // 1. Consulta o índice para obter os ponteiros (pares).
         List<ParUsuarioLista> pares = idxUsuarioLista.readAll(userId);
         List<Lista> listas = new ArrayList<>();
+
+        // 2. Para cada ponteiro, busca o metadado da lista correspondente.
         for (ParUsuarioLista par : pares) {
-            Lista l = buscarListaCompleta(par.getListaId());
+            Lista l = this.buscarListaMetadata(par.getListaId());
             if (l != null) {
                 listas.add(l);
             }
         }
         return listas;
     }
-    
-    public Lista buscarListaPorNomeEUsuario(String nome, int userId) throws Exception {
-        List<Lista> listasDoUsuario = buscarListasPorUsuario(userId);
-        for (Lista lista : listasDoUsuario) {
-            if (lista.getNome().equalsIgnoreCase(nome)) {
-                return lista;
-            }
-        }
-        return null;
-    }
 
-    public void criarListasPadraoParaUsuario(int userId) throws Exception {
-        String[] nomesPadrao = { "Favoritos", "Assistidos", "Quero Assistir" };
-        for (String nome : nomesPadrao) {
-            if (buscarListaPorNomeEUsuario(nome, userId) == null) {
-                Lista listaPadrao = new Lista(0, userId, nome, true);
-                incluirLista(listaPadrao);
-            }
-        }
+    public boolean removerFilmeDaLista(int listaId, int filmeId) throws Exception {
+        ParListaFilme parParaDeletar = new ParListaFilme(listaId, filmeId);
+        return idxListaFilme.delete(parParaDeletar);
     }
 }
+

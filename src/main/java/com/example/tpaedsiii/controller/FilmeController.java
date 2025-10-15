@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/filmes")
 @Tag(name = "Filmes", description = "Endpoints para o gerenciamento de filmes")
@@ -39,7 +38,20 @@ public class FilmeController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
-    
+
+    @Operation(summary = "Lista todos os filmes cadastrados no sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de filmes retornada com sucesso")
+    })
+    @GetMapping
+    public ResponseEntity<?> getAllFilmes() {
+        try {
+            List<Filme> filmes = filmeService.listarTodos();
+            return ResponseEntity.ok(filmes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
 
     @Operation(summary = "Busca filmes cujo título contenha um determinado termo")
     @ApiResponses(value = {
@@ -69,6 +81,22 @@ public class FilmeController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
+
+    @Operation(summary = "Atualiza os dados de um filme existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Filme atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Filme não encontrado para atualização")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateFilme(@PathVariable int id, @RequestBody Filme filme) {
+        try {
+            filme.setId(id); // Garante que o ID da URL seja usado
+            boolean atualizado = filmeService.atualizarFilme(filme);
+            return atualizado ? ResponseEntity.ok(filme) : ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
     
     @Operation(summary = "Exclui um filme pelo seu ID")
     @ApiResponses(value = {
@@ -83,46 +111,5 @@ public class FilmeController {
             return ResponseEntity.internalServerError().build();
         }
     }
-
-    @Operation(summary = "Atualiza os dados de um filme existente")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Filme atualizado com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Filme não encontrado para atualização")
-    })
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateFilme(@PathVariable int id, @RequestBody Filme filme) {
-        try {
-            Filme existente = filmeService.buscarPorId(id);
-            if (existente == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            // Mantém o mesmo ID e atualiza os demais campos
-            filme.setId(id);
-            boolean atualizado = filmeService.atualizarFilme(filme);
-
-            if (atualizado) {
-                return ResponseEntity.ok(filme);
-            } else {
-                return ResponseEntity.internalServerError().body("Erro ao atualizar o filme.");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
-    }
-
-    @Operation(summary = "Lista todos os filmes cadastrados")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lista de filmes retornada com sucesso")
-    })
-    @GetMapping
-    public ResponseEntity<?> listarFilmes() {
-        try {
-            List<Filme> filmes = filmeService.listarTodos();
-            return ResponseEntity.ok(filmes);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
-    }
-
 }
+

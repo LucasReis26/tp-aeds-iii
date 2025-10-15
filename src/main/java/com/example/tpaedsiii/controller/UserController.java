@@ -6,9 +6,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -18,29 +20,29 @@ public class UserController {
 
     private final UserService userService;
 
+    @Autowired
     public UserController(UserService userService) {
         this.userService = userService;
     }
-
 
     @Operation(summary = "Lista todos os usuários cadastrados no sistema")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
     })
     @GetMapping
-    public ResponseEntity<?> listarTodosUsuarios() {
+    public ResponseEntity<?> getAllUsers() {
         try {
-            return ResponseEntity.ok(userService.listarTodosUsuarios());
+            List<User> users = userService.listarTodos();
+            return ResponseEntity.ok(users);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 
-
     @Operation(summary = "Busca um usuário pelo seu ID único")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Usuário com o ID fornecido não foi encontrado")
+        @ApiResponse(responseCode = "200", description = "Usuário encontrado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Usuário com o ID fornecido não foi encontrado")
     })
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserById(@PathVariable int id) {
@@ -54,8 +56,8 @@ public class UserController {
 
     @Operation(summary = "Cria um novo usuário no sistema")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
-            @ApiResponse(responseCode = "409", description = "Conflito: o nome de usuário já existe")
+        @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Conflito: o nome de usuário já existe")
     })
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody User user) {
@@ -68,36 +70,33 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "Atualiza os dados de um usuário existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Usuário não encontrado para atualização")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable int id, @RequestBody User userData) {
+        try {
+            User updatedUser = userService.alterarUsuario(id, userData.getUsername(), userData.getDescription());
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
     @Operation(summary = "Exclui um usuário pelo seu ID")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Usuário excluído com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado para exclusão")
+        @ApiResponse(responseCode = "204", description = "Usuário excluído com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Usuário não encontrado para exclusão")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable int id) {
         try {
-            return userService.deletarUsuario(id) ? ResponseEntity.noContent().build()
-                    : ResponseEntity.notFound().build();
+            return userService.deletarUsuario(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
-
-    @Operation(summary = "Atualiza um usuário pelo seu ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado para atualização"),
-            @ApiResponse(responseCode = "409", description = "Nome de usuário já existe")
-    })
-
-    @PutMapping("/{id}") 
-public ResponseEntity<?> updateUser(@PathVariable int id, @RequestBody User userData) {
-    try {
-        User updatedUser = userService.alterarUsuario(id, userData.getUsername(), userData.getDescription());
-        return ResponseEntity.ok(updatedUser);
-    } catch (Exception e) {
-        return ResponseEntity.notFound().build();
-    }
 }
 
-}

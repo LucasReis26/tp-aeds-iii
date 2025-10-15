@@ -30,12 +30,13 @@ public class FilmeService {
         return filmeRepository.excluirFilme(id);
     }
 
+   
     public boolean atualizarFilme(Filme filme) throws Exception {
         return filmeRepository.alterarFilme(filme);
     }
 
-    public List<Filme> listarTodos() throws Exception {
-        return filmeRepository.buscarListaCompleta();
-    }
 
+    public List<Filme> listarTodos() throws Exception {
+        return filmeRepository.readAll();
+    }
 }
