@@ -1,5 +1,7 @@
 package com.example.tpaedsiii.model.filme;
+
 import com.example.tpaedsiii.repository.bd.base.Registro;
+import com.example.tpaedsiii.repository.bd.indexes.base.RegistroArvoreBMais;
 import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash;
 
 import java.io.ByteArrayInputStream;
@@ -11,9 +13,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.*;
 import java.util.ArrayList;
 
-public class Filme implements Registro, RegistroHash<Filme> {
+public class Filme implements Registro, RegistroHash<Filme>, RegistroArvoreBMais<Filme> {
     final int MAX_TAMANHO = 10_000_000;
-    private static final int TAMANHO_FIXO_HASH = 256;
+    private final short TAMANHO_FIXO = 512;
     private int id;
     private int score;
     private String title;
@@ -22,6 +24,20 @@ public class Filme implements Registro, RegistroHash<Filme> {
     ArrayList<String> directors = new ArrayList<String>();
     ArrayList<String> actors = new ArrayList<String>();
     private int rating;
+
+    @Override
+    public Filme clone() {
+        Filme clone = new Filme();
+        clone.id = this.id;
+        clone.score = this.score;
+        clone.title = this.title;
+        clone.releaseDate = this.releaseDate;
+        clone.duration = this.duration;
+        clone.directors = new ArrayList<>(this.directors);
+        clone.actors = new ArrayList<>(this.actors);
+        clone.rating = this.rating;
+        return clone;
+    }
 
     public int getId() {
         return id;
@@ -103,6 +119,7 @@ public class Filme implements Registro, RegistroHash<Filme> {
         this.duration = duration;
     }
 
+    @Override
     public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
@@ -114,9 +131,17 @@ public class Filme implements Registro, RegistroHash<Filme> {
         writeStringArray(directors, dos);
         writeStringArray(actors, dos);
         dos.writeInt(rating);
-        return baos.toByteArray();
+
+        byte[] dadosVariaveis = baos.toByteArray();
+        if (dadosVariaveis.length > TAMANHO_FIXO) {
+            throw new IOException("Tamanho do filme excede o buffer fixo de " + TAMANHO_FIXO + " bytes.");
+        }
+        byte[] bufferFixo = new byte[TAMANHO_FIXO];
+        System.arraycopy(dadosVariaveis, 0, bufferFixo, 0, dadosVariaveis.length);
+        return bufferFixo;
     }
 
+    @Override
     public void fromByteArray(byte[] b) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(b);
         DataInputStream dis = new DataInputStream(bais);
@@ -125,35 +150,33 @@ public class Filme implements Registro, RegistroHash<Filme> {
         this.title = dis.readUTF();
         this.releaseDate = LocalDate.ofEpochDay(dis.readLong());
         this.duration = dis.readLong();
-        this.directors = readStringArray(directors, dis);
-        this.actors = readStringArray(actors, dis);
+        this.directors = readStringArray(new ArrayList<>(), dis);
+        this.actors = readStringArray(new ArrayList<>(), dis);
         this.rating = dis.readInt();
-
     }
 
     public void writeStringArray(ArrayList<String> list, DataOutputStream dos) throws IOException {
-    dos.writeInt(list.size()); // escreve o número de elementos da lista
-    for (String s : list) {
-        byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
-        dos.writeInt(bytes.length);
-        dos.write(bytes);
+        dos.writeInt(list.size()); 
+        for (String s : list) {
+            byte[] bytes = s.getBytes(StandardCharsets.UTF_8);
+            dos.writeInt(bytes.length);
+            dos.write(bytes);
+        }
     }
-}
 
-public ArrayList<String> readStringArray(ArrayList<String> list, DataInputStream dis) throws IOException {
-    list.clear();
-    int entityNum = dis.readInt(); // lê o tamanho da lista corretamente
-    for (int i = 0; i < entityNum; i++) {
-        int len = dis.readInt();
-        if (len < 0 || len > MAX_TAMANHO)
-            throw new IOException("Tamanho inválido: " + len);
-        byte[] bytes = new byte[len];
-        dis.readFully(bytes);
-        list.add(new String(bytes, StandardCharsets.UTF_8));
+    public ArrayList<String> readStringArray(ArrayList<String> list, DataInputStream dis) throws IOException {
+        list.clear();
+        int entityNum = dis.readInt(); 
+        for (int i = 0; i < entityNum; i++) {
+            int len = dis.readInt();
+            if (len < 0 || len > MAX_TAMANHO)
+                throw new IOException("Tamanho inválido: " + len);
+            byte[] bytes = new byte[len];
+            dis.readFully(bytes);
+            list.add(new String(bytes, StandardCharsets.UTF_8));
+        }
+        return list;
     }
-    return list;
-}
-
 
     public String toString() {
         return "Filme {" +
@@ -172,8 +195,14 @@ public ArrayList<String> readStringArray(ArrayList<String> list, DataInputStream
         return this.id;
     }
 
-    public int size() {
-        return TAMANHO_FIXO_HASH;
+    @Override
+    public short size() {
+        return TAMANHO_FIXO;
+    }
+
+    @Override
+    public int compareTo(Filme obj) {
+        return Integer.compare(this.id, obj.id);
     }
 
 }

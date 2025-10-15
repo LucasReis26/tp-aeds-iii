@@ -5,7 +5,7 @@ public interface RegistroHash<T> {
 
   public int hashCode(); 
 
-  public int size(); 
+  public short size(); 
 
   public byte[] toByteArray() throws IOException; 
 

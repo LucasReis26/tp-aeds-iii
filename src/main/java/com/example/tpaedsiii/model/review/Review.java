@@ -1,7 +1,8 @@
 package com.example.tpaedsiii.model.review;
 
 import com.example.tpaedsiii.repository.bd.base.Registro;
-import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash; // IMPORTAÇÃO NECESSÁRIA
+import com.example.tpaedsiii.repository.bd.indexes.base.RegistroArvoreBMais;
+import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -9,7 +10,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Date;
 
-public class Review implements Registro, RegistroHash<Review> {
+public class Review implements Registro, RegistroHash<Review>, RegistroArvoreBMais<Review> {
 
     private int id;
     private int userId;
@@ -18,10 +19,19 @@ public class Review implements Registro, RegistroHash<Review> {
     private String comentario;
     private Date data;
     
-    private static final int TAMANHO_FIXO_HASH = 256;
+    private static final int TAMANHO_FIXO = 256;
 
     public Review() {
         this.id = -1;
+        this.userId = -1;
+        this.filmeId = -1;
+        this.nota = 0.0f;
+        this.comentario = "";
+        this.data = new Date();
+    }
+
+    public Review(int id) {
+        this.id = id;
         this.userId = -1;
         this.filmeId = -1;
         this.nota = 0.0f;
@@ -51,16 +61,30 @@ public class Review implements Registro, RegistroHash<Review> {
     public Date getData() { return data; }
     public void setData(Date data) { this.data = data; }
 
+
     @Override
     public int hashCode() {
         return this.id; 
     }
 
     @Override
-    public int size() {
-        return TAMANHO_FIXO_HASH; 
+    public short size() {
+        return TAMANHO_FIXO; 
     }
 
+
+    @Override
+    public int compareTo(Review outra) {
+        return Integer.compare(this.id, outra.id);
+    }
+    
+    
+    @Override
+    public Review clone() {
+        return new Review(this.id, this.userId, this.filmeId, this.nota, this.comentario, this.data);
+    }
+
+    
     @Override
     public byte[] toByteArray() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -73,10 +97,10 @@ public class Review implements Registro, RegistroHash<Review> {
         dos.writeLong(this.data.getTime());
 
         byte[] dadosVariaveis = baos.toByteArray();
-        if (dadosVariaveis.length > TAMANHO_FIXO_HASH) {
-             throw new IOException("Tamanho da review (" + dadosVariaveis.length + ") excede o buffer fixo de " + TAMANHO_FIXO_HASH + " bytes.");
+        if (dadosVariaveis.length > TAMANHO_FIXO) {
+             throw new IOException("Tamanho da review (" + dadosVariaveis.length + ") excede o buffer fixo de " + TAMANHO_FIXO + " bytes.");
         }
-        byte[] bufferFixo = new byte[TAMANHO_FIXO_HASH];
+        byte[] bufferFixo = new byte[TAMANHO_FIXO];
         System.arraycopy(dadosVariaveis, 0, bufferFixo, 0, dadosVariaveis.length);
         return bufferFixo;
     }

@@ -17,7 +17,6 @@ public class ParFilmeReview implements RegistroHash<ParFilmeReview> {
     
     @Override
     public void setId(int id) {
-        // Não faz nada. O corpo está intencionalmente vazio.
     }
 
     @Override public int hashCode() { return this.filmeId; }
