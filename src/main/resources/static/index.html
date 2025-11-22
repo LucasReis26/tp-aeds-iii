@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -58,6 +59,7 @@
             padding-top: 1.5rem;
             margin-top: 1.5rem;
         }
+
         .entity-column .operation:first-of-type {
             border-top: none;
             padding-top: 0;
@@ -78,7 +80,18 @@
             margin-bottom: 1rem;
         }
 
-        input, button {
+        .badge-rsa {
+            background-color: #e50914;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        input,
+        button {
             width: 100%;
             box-sizing: border-box;
             padding: 12px 15px;
@@ -91,11 +104,13 @@
             border: 1px solid #555;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
+
         input:focus {
             outline: none;
             border-color: var(--primary-red);
             box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.4);
         }
+
         input::placeholder {
             color: var(--text-muted);
         }
@@ -124,17 +139,19 @@
             max-height: 300px;
             overflow-y: auto;
         }
+
         pre.success {
             border-left: 4px solid var(--success-color);
             color: #d0d0d0;
         }
+
         pre.error {
             border-left: 4px solid var(--primary-red);
             color: #ffbaba;
         }
-        
     </style>
 </head>
+
 <body>
 
     <header class="header">
@@ -144,25 +161,28 @@
 
     <main class="grid-container">
 
-        <!-- Coluna de Usuários -->
         <section class="entity-column">
-            <h2>Usuários</h2>
+            <h2>Usuários <span class="badge-rsa">RSA SECURE</span></h2>
             <div class="operation">
                 <h3>Criar Usuário</h3>
                 <input id="user-username" placeholder="Nome de usuário (ex: 'alice')">
                 <input id="user-description" placeholder="Descrição (ex: 'Gosta de drama')">
-                <input id="user-password" type="password" placeholder="Senha">
-                <button onclick="handleApiCall('user-create-result', 'POST', '/users', { username: getValue('user-username'), description: getValue('user-description'), password: getValue('user-password') })">Criar</button>
+                <input id="user-password" type="password" placeholder="Senha (será criptografada no DB)">
+                <button
+                    onclick="handleApiCall('user-create-result', 'POST', '/users', { username: getValue('user-username'), description: getValue('user-description'), password: getValue('user-password') })">Criar</button>
                 <pre id="user-create-result"></pre>
             </div>
             <div class="operation">
                 <h3>Gerenciar Usuário por ID</h3>
                 <input id="user-id" type="number" placeholder="ID do Usuário">
-                <button onclick="handleApiCall('user-manage-result', 'GET', `/users/${getValue('user-id')}`)">Buscar</button>
+                <button onclick="handleApiCall('user-manage-result', 'GET', `/users/${getValue('user-id')}`)">Buscar
+                    (Descriptografa Auto)</button>
                 <input id="user-new-username" placeholder="Novo nome de usuário (para alterar)">
                 <input id="user-new-description" placeholder="Nova descrição (para alterar)">
-                <button onclick="handleApiCall('user-manage-result', 'PUT', `/users/${getValue('user-id')}`, { username: getValue('user-new-username'), description: getValue('user-new-description') })">Alterar</button>
-                <button onclick="handleApiCall('user-manage-result', 'DELETE', `/users/${getValue('user-id')}`)">Excluir</button>
+                <button
+                    onclick="handleApiCall('user-manage-result', 'PUT', `/users/${getValue('user-id')}`, { username: getValue('user-new-username'), description: getValue('user-new-description') })">Alterar</button>
+                <button
+                    onclick="handleApiCall('user-manage-result', 'DELETE', `/users/${getValue('user-id')}`)">Excluir</button>
                 <pre id="user-manage-result"></pre>
             </div>
             <div class="operation">
@@ -172,7 +192,6 @@
             </div>
         </section>
 
-        <!-- Coluna de Filmes -->
         <section class="entity-column">
             <h2>Filmes</h2>
             <div class="operation">
@@ -190,16 +209,20 @@
             <div class="operation">
                 <h3>Buscar / Excluir Filmes</h3>
                 <input id="filme-id" type="number" placeholder="ID do Filme para buscar/excluir">
-                <button onclick="handleApiCall('filme-search-result', 'GET', `/filmes/${getValue('filme-id')}`)">Buscar por ID</button>
-                <button onclick="handleApiCall('filme-search-result', 'DELETE', `/filmes/${getValue('filme-id')}`)">Excluir por ID</button>
+                <button onclick="handleApiCall('filme-search-result', 'GET', `/filmes/${getValue('filme-id')}`)">Buscar
+                    por ID</button>
+                <button
+                    onclick="handleApiCall('filme-search-result', 'DELETE', `/filmes/${getValue('filme-id')}`)">Excluir
+                    por ID</button>
                 <input id="filme-search-title" placeholder="Termo de busca no Título">
-                <button onclick="handleApiCall('filme-search-result', 'GET', `/filmes/buscar?titulo=${getValue('filme-search-title')}`)">Buscar por Título</button>
+                <button
+                    onclick="handleApiCall('filme-search-result', 'GET', `/filmes/buscar?titulo=${getValue('filme-search-title')}`)">Buscar
+                    por Título</button>
                 <button onclick="handleApiCall('filme-search-result', 'GET', '/filmes')">Listar Todos</button>
                 <pre id="filme-search-result"></pre>
             </div>
         </section>
 
-        <!-- Coluna de Reviews -->
         <section class="entity-column">
             <h2>Reviews</h2>
             <div class="operation">
@@ -223,27 +246,39 @@
             <div class="operation">
                 <h3>Buscar / Excluir / Listar Reviews</h3>
                 <input id="review-id" type="number" placeholder="ID da Review para buscar/excluir">
-                <button onclick="handleApiCall('review-list-result', 'GET', `/reviews/${getValue('review-id')}`)">Buscar por ID</button>
-                <button onclick="handleApiCall('review-list-result', 'DELETE', `/reviews/${getValue('review-id')}`)">Excluir por ID</button>
+                <button onclick="handleApiCall('review-list-result', 'GET', `/reviews/${getValue('review-id')}`)">Buscar
+                    por ID</button>
+                <button
+                    onclick="handleApiCall('review-list-result', 'DELETE', `/reviews/${getValue('review-id')}`)">Excluir
+                    por ID</button>
                 <input id="review-list-userId" type="number" placeholder="ID do Usuário para listar">
-                <button onclick="handleApiCall('review-list-result', 'GET', `/reviews/user/${getValue('review-list-userId')}`)">Listar por Usuário</button>
+                <button
+                    onclick="handleApiCall('review-list-result', 'GET', `/reviews/user/${getValue('review-list-userId')}`)">Listar
+                    por Usuário</button>
                 <input id="review-list-filmeId" type="number" placeholder="ID do Filme para listar">
-                <button onclick="handleApiCall('review-list-result', 'GET', `/reviews/filme/${getValue('review-list-filmeId')}`)">Listar por Filme</button>
+                <button
+                    onclick="handleApiCall('review-list-result', 'GET', `/reviews/filme/${getValue('review-list-filmeId')}`)">Listar
+                    por Filme</button>
                 <button onclick="handleApiCall('review-list-result', 'GET', '/reviews')">Listar Todas</button>
                 <pre id="review-list-result"></pre>
             </div>
         </section>
 
-        <!-- Coluna de Listas -->
         <section class="entity-column">
             <h2>Listas</h2>
             <div class="operation">
                 <h3>Gerenciar Listas de Usuário</h3>
                 <input id="lista-userId" type="number" placeholder="ID do Usuário">
-                <button onclick="handleApiCall('lista-user-result', 'POST', `/listas/user/${getValue('lista-userId')}/init-padrao`)">Criar Listas Padrão</button>
+                <button
+                    onclick="handleApiCall('lista-user-result', 'POST', `/listas/user/${getValue('lista-userId')}/init-padrao`)">Criar
+                    Listas Padrão</button>
                 <input id="lista-nome" placeholder="Nome da Lista Personalizada">
-                <button onclick="handleApiCall('lista-user-result', 'POST', '/listas', { userId: parseInt(getValue('lista-userId')), nome: getValue('lista-nome'), padrao: false })">Criar Lista Personalizada</button>
-                <button onclick="handleApiCall('lista-user-result', 'GET', `/listas/user/${getValue('lista-userId')}`)">Ver Listas do Usuário</button>
+                <button
+                    onclick="handleApiCall('lista-user-result', 'POST', '/listas', { userId: parseInt(getValue('lista-userId')), nome: getValue('lista-nome'), padrao: false })">Criar
+                    Lista Personalizada</button>
+                <button
+                    onclick="handleApiCall('lista-user-result', 'GET', `/listas/user/${getValue('lista-userId')}`)">Ver
+                    Listas do Usuário</button>
                 <button onclick="handleApiCall('lista-user-result', 'GET', '/listas')">Listar Todas as Listas</button>
                 <pre id="lista-user-result"></pre>
             </div>
@@ -251,16 +286,24 @@
                 <h3>Gerenciar Filmes em Listas</h3>
                 <input id="lista-id-rel" type="number" placeholder="ID da Lista">
                 <input id="filme-id-rel" type="number" placeholder="ID do Filme">
-                <button onclick="handleApiCall('lista-rel-result', 'POST', `/listas/${getValue('lista-id-rel')}/filmes/${getValue('filme-id-rel')}`)">Adicionar Filme</button>
-                <button onclick="handleApiCall('lista-rel-result', 'DELETE', `/listas/${getValue('lista-id-rel')}/filmes/${getValue('filme-id-rel')}`)">Remover Filme</button>
+                <button
+                    onclick="handleApiCall('lista-rel-result', 'POST', `/listas/${getValue('lista-id-rel')}/filmes/${getValue('filme-id-rel')}`)">Adicionar
+                    Filme</button>
+                <button
+                    onclick="handleApiCall('lista-rel-result', 'DELETE', `/listas/${getValue('lista-id-rel')}/filmes/${getValue('filme-id-rel')}`)">Remover
+                    Filme</button>
                 <pre id="lista-rel-result"></pre>
             </div>
-             <div class="operation">
+            <div class="operation">
                 <h3>Alterar / Excluir Lista</h3>
                 <input id="lista-id-manage" type="number" placeholder="ID da Lista">
                 <input id="lista-new-name" placeholder="Novo Nome (para alterar)">
-                <button onclick="handleApiCall('lista-manage-result', 'PUT', `/listas/${getValue('lista-id-manage')}`, { nome: getValue('lista-new-name') })">Alterar Nome</button>
-                <button onclick="handleApiCall('lista-manage-result', 'DELETE', `/listas/${getValue('lista-id-manage')}`)">Excluir Lista</button>
+                <button
+                    onclick="handleApiCall('lista-manage-result', 'PUT', `/listas/${getValue('lista-id-manage')}`, { nome: getValue('lista-new-name') })">Alterar
+                    Nome</button>
+                <button
+                    onclick="handleApiCall('lista-manage-result', 'DELETE', `/listas/${getValue('lista-id-manage')}`)">Excluir
+                    Lista</button>
                 <pre id="lista-manage-result"></pre>
             </div>
         </section>
@@ -310,7 +353,7 @@
                     }
                     throw new Error(`Status ${response.status}: ${errorMessage}`);
                 }
-                
+
                 resultDiv.classList.add('success');
                 if (typeof responseData === 'object') {
                     resultDiv.textContent = `Sucesso! (Status: ${response.status})\n\n${JSON.stringify(responseData, null, 2)}`;
@@ -336,7 +379,7 @@
             };
             handleApiCall('filme-create-result', 'POST', '/filmes', body);
         }
-        
+
         function criarReview() {
             const body = {
                 userId: parseInt(getValue('review-userId')),
@@ -366,5 +409,5 @@
 
     </script>
 </body>
-</html>
 
+</html>
