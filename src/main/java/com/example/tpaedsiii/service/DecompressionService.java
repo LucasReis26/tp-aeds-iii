@@ -5,20 +5,26 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class DecompressionService {
 
-    private final File dataDir = new File("data");
-    private final File defaultBackup = new File(dataDir, "db_backup.lzw");
+    
+    public byte[] decompressLzwToZipBytes(byte[] lzwBytes) throws Exception {
+        if (lzwBytes == null || lzwBytes.length == 0) {
+            throw new IllegalArgumentException("Arquivo LZW vazio.");
+        }
 
-    public void decompressLzwToDirectory(byte[] lzwBytes, File outputDir) throws Exception {
-        if (outputDir == null) outputDir = new File(dataDir, "restored");
-        if (!outputDir.exists()) outputDir.mkdirs();
-
+        // Decodifica LZW -> obtém o container binário com arquivos
         byte[] container = LZW.decodifica(lzwBytes);
 
-        try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(container))) {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(container);
+             DataInputStream dis = new DataInputStream(bais);
+             ByteArrayOutputStream baosZip = new ByteArrayOutputStream();
+             ZipOutputStream zos = new ZipOutputStream(baosZip)) {
+
             int count = dis.readInt();
             for (int i = 0; i < count; i++) {
                 int nameLen = dis.readInt();
@@ -28,34 +34,33 @@ public class DecompressionService {
 
                 long fileLen = dis.readLong();
 
-                File outFile = new File(outputDir, relative);
-                if (outFile.getParentFile() != null) outFile.getParentFile().mkdirs();
-
-                try (FileOutputStream fos = new FileOutputStream(outFile)) {
-                    long remaining = fileLen;
-                    byte[] buf = new byte[8192];
-                    while (remaining > 0) {
-                        int toRead = (int) Math.min(buf.length, remaining);
-                        int read = dis.read(buf, 0, toRead);
-                        if (read == -1) throw new EOFException("Formato inválido do container: EOF precoce");
-                        fos.write(buf, 0, read);
-                        remaining -= read;
-                    }
+                // Cria entrada de zip com caminho relativo
+                ZipEntry entry = new ZipEntry(relative);
+                if (relative.endsWith("/")) {
+                    entry = new ZipEntry(relative);
+                    zos.putNextEntry(entry);
+                    zos.closeEntry();
+                    continue;
                 }
-            }
-        }
-    }
 
-    public void decompressDefaultBackupToRestored() throws Exception {
-        if (!defaultBackup.exists()) throw new FileNotFoundException("Arquivo padrão db_backup.lzw não encontrado em: " + defaultBackup.getAbsolutePath());
-        byte[] bytes;
-        try (FileInputStream fis = new FileInputStream(defaultBackup);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            byte[] buf = new byte[8192];
-            int r;
-            while ((r = fis.read(buf)) != -1) baos.write(buf, 0, r);
-            bytes = baos.toByteArray();
+                zos.putNextEntry(entry);
+
+                // Escreve conteúdo do arquivo no zip
+                long remaining = fileLen;
+                byte[] buf = new byte[8192];
+                while (remaining > 0) {
+                    int toRead = (int) Math.min(buf.length, remaining);
+                    int read = dis.read(buf, 0, toRead);
+                    if (read == -1) throw new EOFException("Formato do container inválido: EOF precoce");
+                    zos.write(buf, 0, read);
+                    remaining -= read;
+                }
+
+                zos.closeEntry();
+            }
+
+            zos.finish();
+            return baosZip.toByteArray();
         }
-        decompressLzwToDirectory(bytes, null);
     }
 }

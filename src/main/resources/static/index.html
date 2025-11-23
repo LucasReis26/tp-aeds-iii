@@ -416,100 +416,123 @@
         async function compactarLZW() {
             const resultadoEl = document.getElementById('resultadoLZW');
             resultadoEl.className = '';
-            resultadoEl.textContent = 'Gerando arquivo...';
+            resultadoEl.textContent = 'Gerando arquivo LZW...';
 
             try {
-         
-            const headers = {};
-            const tokenMeta = document.querySelector('meta[name="_csrf"]');
-            const headerMeta = document.querySelector('meta[name="_csrf_header"]');
-            if (tokenMeta && headerMeta) {
-                headers[ headerMeta.getAttribute('content') ] = tokenMeta.getAttribute('content');
-            }
+                // opcional: CSRF via meta tags (se usar Spring Security + CSRF)
+                const headers = {};
+                const tokenMeta = document.querySelector('meta[name="_csrf"]');
+                const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+                if (tokenMeta && headerMeta) {
+                    headers[ headerMeta.getAttribute('content') ] = tokenMeta.getAttribute('content');
+                }
 
-            const resp = await fetch(`${API_BASE_URL}/compress-db`, {
-                method: 'POST',
-                headers: headers
-            });
+                const resp = await fetch(`${API_BASE_URL}/compress-db`, {
+                    method: 'POST',
+                    headers: headers
+                });
 
-            if (!resp.ok) {
-                const txt = await resp.text();
-                resultadoEl.classList.add('error');
-                resultadoEl.textContent = 'Erro: ' + txt;
-                return;
-            }
+                if (!resp.ok) {
+                    const txt = await resp.text();
+                    resultadoEl.classList.add('error');
+                    resultadoEl.textContent = 'Erro ao compactar: ' + txt;
+                    return;
+                }
 
-            const blob = await resp.blob();
+                // lê stats dos headers (definidos no CompressionController)
+                const origSize = Number(resp.headers.get('X-Original-Size')) || 0;
+                const compSize = Number(resp.headers.get('X-Compressed-Size')) || 0;
+                const ratio = resp.headers.get('X-Compression-Ratio') || (origSize ? ((1 - compSize / origSize) * 100).toFixed(2) : '0.00');
 
-         
-            const cd = resp.headers.get('Content-Disposition') || resp.headers.get('content-disposition');
-            let filename = 'db_backup.lzw';
-            if (cd) {
-                const m = /filename="?([^"]+)"?/.exec(cd);
-                if (m && m[1]) filename = m[1];
-            }
+                // obtém blob e força download
+                const blob = await resp.blob();
+                const cd = resp.headers.get('Content-Disposition') || resp.headers.get('content-disposition');
+                let filename = 'db_backup.lzw';
+                if (cd) {
+                    const m = /filename="?([^"]+)"?/.exec(cd);
+                    if (m && m[1]) filename = m[1];
+                }
 
-           
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
 
-            resultadoEl.classList.add('success');
-            resultadoEl.textContent = 'Download iniciado: ' + filename;
+                resultadoEl.classList.add('success');
+                resultadoEl.textContent = `Download iniciado: ${filename}\nTamanho original: ${origSize} bytes\nTamanho comprimido: ${compSize} bytes\nTaxa de compressão: ${String(ratio)}%`;
             } catch (err) {
-            console.error(err);
-            resultadoEl.classList.add('error');
-            resultadoEl.textContent = 'Erro ao compactar: ' + err.toString();
-            } finally {
-            setTimeout(()=> { resultadoEl.textContent = ''; resultadoEl.className = ''; }, 4000);
+                console.error(err);
+                resultadoEl.classList.add('error');
+                resultadoEl.textContent = 'Erro ao compactar: ' + err.toString();
             }
         }
 
-        async function descompactarLZW() {
+       async function descompactarLZW() {
             const resultadoEl = document.getElementById('resultadoLZW');
             const inputRestoreFile = document.getElementById('inputRestoreFile');
             resultadoEl.className = '';
-            resultadoEl.textContent = 'Executando descompactação...';
+            resultadoEl.textContent = 'Enviando arquivo para descompactar...';
 
             try {
-       
-            const headers = {};
-            const tokenMeta = document.querySelector('meta[name="_csrf"]');
-            const headerMeta = document.querySelector('meta[name="_csrf_header"]');
-            if (tokenMeta && headerMeta) {
-                headers[ headerMeta.getAttribute('content') ] = tokenMeta.getAttribute('content');
-            }
+                if (!inputRestoreFile || inputRestoreFile.files.length === 0) {
+                    resultadoEl.classList.add('error');
+                    resultadoEl.textContent = 'Por favor, selecione um arquivo .lzw para enviar.';
+                    return;
+                }
 
-            const fd = new FormData();
-            if (inputRestoreFile && inputRestoreFile.files.length > 0) {
+                const fd = new FormData();
                 fd.append('file', inputRestoreFile.files[0]);
-            }
 
-            const resp = await fetch(`${API_BASE_URL}/decompress-db`, {
-                method: 'POST',
-                headers: headers, 
-                body: fd
-            });
+                // CSRF: caso use Spring Security e tenha meta tags no template
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
 
-            const text = await resp.text();
-            if (!resp.ok) {
-                resultadoEl.classList.add('error');
-                resultadoEl.textContent = 'Erro: ' + text;
-            } else {
+                const headers = {};
+                if (csrfHeader && csrfToken) headers[csrfHeader] = csrfToken;
+
+                const resp = await fetch(`${API_BASE_URL}/decompress-db`, {
+                    method: 'POST',
+                    body: fd,
+                    headers: headers
+                });
+
+                if (!resp.ok) {
+                    const txt = await resp.text();
+                    resultadoEl.classList.add('error');
+                    resultadoEl.textContent = 'Erro: ' + txt;
+                    return;
+                }
+
+                // recebe zip como blob e força download
+                const blob = await resp.blob();
+                const cd = resp.headers.get('Content-Disposition') || resp.headers.get('content-disposition');
+                let filename = 'db_restored.zip';
+                if (cd) {
+                    const m = /filename="?([^"]+)"?/.exec(cd);
+                    if (m && m[1]) filename = m[1];
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+
                 resultadoEl.classList.add('success');
-                resultadoEl.textContent = text;
-            }
+                resultadoEl.textContent = 'Download do ZIP iniciado: ' + filename;
             } catch (err) {
-            console.error(err);
-            resultadoEl.classList.add('error');
-            resultadoEl.textContent = 'Erro ao descompactar: ' + err.toString();
+                console.error(err);
+                resultadoEl.classList.add('error');
+                resultadoEl.textContent = 'Erro ao descompactar: ' + err.toString();
             } finally {
-            setTimeout(()=> { resultadoEl.textContent = ''; resultadoEl.className = ''; }, 5000);
+                setTimeout(()=> { resultadoEl.textContent = ''; resultadoEl.className = ''; }, 5000);
             }
         }
 
