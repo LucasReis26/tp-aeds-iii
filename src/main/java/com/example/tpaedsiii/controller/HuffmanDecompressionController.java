@@ -23,36 +23,30 @@ public class HuffmanDecompressionController {
 
     @PostMapping(
         path = "/api/decompress-db-huffman",
-        consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-        produces = MediaType.TEXT_PLAIN_VALUE
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public ResponseEntity<String> decompressDbHuffman(
+    public ResponseEntity<byte[]> decompressDbHuffman(
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
         try {
-            String message;
+            byte[] zipBytes;
 
             if (file != null && !file.isEmpty()) {
-                byte[] bytes = file.getBytes();
-                decompressionService.decompressHuffmanToDirectory(bytes, null);
-                message = "Descompactação Huffman concluída (arquivo enviado).";
+                zipBytes = decompressionService.decompressHuffmanToZip(file.getBytes());
             } else {
-                decompressionService.decompressDefaultBackupToRestored(); // <-- CORRIGIDO
-                message = "Descompactação Huffman concluída (usando data/db_backup.huff).";
+                zipBytes = decompressionService.decompressDefaultBackupToZip();
             }
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
-
             return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(message);
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"restore_huffman.zip\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(zipBytes);
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500)
                     .contentType(MediaType.TEXT_PLAIN)
-                    .body("Erro ao descompactar Huffman: " + e.getMessage());
+                    .body(("Erro ao descompactar Huffman: " + e.getMessage()).getBytes());
         }
     }
 }

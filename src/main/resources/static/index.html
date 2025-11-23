@@ -290,24 +290,32 @@
         <pre id="resultadoLZW" style="margin-top:12px;"></pre>
     </div>
 
-    <!-- HUFFMAN -->
-    <div class="operation">
-        <h3>Huffman</h3>
-        <p style="color:var(--text-muted); margin-bottom: 1rem;">
-            Compacte todo o diretório <code>data/</code> em <code>db_backup.huff</code> usando Huffman.
-        </p>
+<!-- HUFFMAN -->
+<div class="operation">
+    <h3>Huffman</h3>
+    <p style="color:var(--text-muted); margin-bottom: 1rem;">
+        Compacte todo o diretório <code>data/</code> em <code>db_backup.huf</code>.
+    </p>
 
-        <button onclick="compactarHuffman()">Compactar (Huffman)</button>
+    <button onclick="compactarHuffman()">Compactar (Huffman)</button>
 
-        <div style="margin-top:0.75rem; margin-bottom:0.25rem;">
-            <input id="inputRestoreHuff" type="file" accept=".huff"
-                style="width:100%; padding:8px; border-radius:6px; background:#3a3a3c; border:1px solid #555; color:var(--text-color);">
-        </div>
-
-        <button style="margin-top:6px;" onclick="descompactarHuffman()">Descompactar (Huffman)</button>
-
-        <pre id="resultadoHuffman" style="margin-top:12px;"></pre>
+    <div style="margin-top:0.75rem; margin-bottom:0.25rem;">
+        <input id="inputRestoreHuff" type="file" accept=".huf"
+            style="width:100%; padding:8px; border-radius:6px; background:#3a3a3c; border:1px solid #555; color:var(--text-color);">
     </div>
+
+    <button style="margin-top:6px;" onclick="descompactarHuffman()">Descompactar (Huffman)</button>
+
+    <pre id="resultadoHuffman" style="margin-top:12px;"></pre>
+
+    <div id="taxasHuffman" style="display:none; margin-top:15px; padding:12px; background:#1c1c1e; border-radius:8px; border:1px solid #333;">
+        <h4 style="margin-top:0;">Taxas de Compressão (Huffman)</h4>
+        <p><strong>Tamanho Original:</strong> <span id="huff-orig"></span> bytes</p>
+        <p><strong>Tamanho Comprimido:</strong> <span id="huff-comp"></span> bytes</p>
+        <p><strong>Taxa de Compressão:</strong> <span id="huff-taxa"></span>%</p>
+    </div>
+</div>
+
 
 </section>
 
@@ -514,9 +522,11 @@
         }
 
 async function compactarHuffman() {
-    const res = document.getElementById('resultadoHuffman');
-    res.className = '';
-    res.textContent = 'Compactando com Huffman...';
+    const resultadoEl = document.getElementById('resultadoHuffman');
+    const taxasBox = document.getElementById('taxasHuffman');
+    resultadoEl.className = '';
+    resultadoEl.textContent = 'Gerando arquivo...';
+    taxasBox.style.display = 'none';
 
     try {
         const resp = await fetch(`${API_BASE_URL}/compress-db-huffman`, {
@@ -525,20 +535,90 @@ async function compactarHuffman() {
 
         if (!resp.ok) {
             const txt = await resp.text();
-            res.classList.add('error');
-            res.textContent = 'Erro: ' + txt;
+            resultadoEl.classList.add('error');
+            resultadoEl.textContent = 'Erro: ' + txt;
             return;
         }
 
         const blob = await resp.blob();
 
-        let filename = "db_backup.huff";
+        // ---------------------------
+        // 📌 LEITURA DOS HEADERS
+        // ---------------------------
+        const origSize = Number(resp.headers.get("X-Original-Size"));
+        const compSize = Number(resp.headers.get("Content-Length"));
+        const taxa = ((1 - compSize / origSize) * 100).toFixed(2);
+
+        // Exibir na tela
+        document.getElementById("huff-orig").textContent = origSize;
+        document.getElementById("huff-comp").textContent = compSize;
+        document.getElementById("huff-taxa").textContent = taxa;
+        taxasBox.style.display = 'block';
+
+        // ---------------------------
+        // 📌 DOWNLOAD AUTOMÁTICO
+        // ---------------------------
+        const cd = resp.headers.get("Content-Disposition");
+        let filename = "db_backup.huf";
+        if (cd) {
+            const m = /filename="?([^"]+)"?/.exec(cd);
+            if (m && m[1]) filename = m[1];
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        resultadoEl.classList.add('success');
+        resultadoEl.textContent = 'Download iniciado: ' + filename;
+
+    } catch (err) {
+        resultadoEl.classList.add('error');
+        resultadoEl.textContent = 'Erro ao compactar: ' + err.toString();
+    }
+}
+
+async function descompactarHuffman() {
+    const resultadoEl = document.getElementById('resultadoHuffman');
+    const inputFile = document.getElementById('inputRestoreHuff');
+
+    resultadoEl.className = '';
+    resultadoEl.textContent = 'Gerando arquivo ZIP...';
+
+    try {
+        const form = new FormData();
+        if (inputFile.files.length > 0) {
+            form.append("file", inputFile.files[0]);
+        }
+
+        const resp = await fetch(`${API_BASE_URL}/decompress-db-huffman`, {
+            method: "POST",
+            body: form
+        });
+
+        if (!resp.ok) {
+            const txt = await resp.text();
+            resultadoEl.classList.add('error');
+            resultadoEl.textContent = 'Erro: ' + txt;
+            return;
+        }
+
+        // O servidor deve retornar um ZIP agora
+        const blob = await resp.blob();
+
+        let filename = "restaurado.zip";
         const cd = resp.headers.get("Content-Disposition");
         if (cd) {
             const m = /filename="?([^"]+)"?/.exec(cd);
-            if (m) filename = m[1];
+            if (m && m[1]) filename = m[1];
         }
 
+        // Download automático
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -548,49 +628,15 @@ async function compactarHuffman() {
         a.remove();
         URL.revokeObjectURL(url);
 
-        res.classList.add('success');
-        res.textContent = 'Download iniciado: ' + filename;
+        resultadoEl.classList.add('success');
+        resultadoEl.textContent = "Download iniciado: " + filename;
 
     } catch (err) {
-        res.classList.add('error');
-        res.textContent = 'Erro ao compactar: ' + err.toString();
+        resultadoEl.classList.add('error');
+        resultadoEl.textContent = "Erro ao descompactar: " + err.toString();
     }
 }
 
-async function descompactarHuffman() {
-    const res = document.getElementById('resultadoHuffman');
-    const fileInput = document.getElementById('inputRestoreHuff');
-
-    res.className = '';
-    res.textContent = 'Descompactando com Huffman...';
-
-    try {
-        const fd = new FormData();
-        if (fileInput.files.length > 0) {
-            fd.append('file', fileInput.files[0]);
-        }
-
-        const resp = await fetch(`${API_BASE_URL}/decompress-db-huffman`, {
-            method: 'POST',
-            body: fd
-        });
-
-        const txt = await resp.text();
-
-        if (!resp.ok) {
-            res.classList.add('error');
-            res.textContent = 'Erro: ' + txt;
-            return;
-        }
-
-        res.classList.add('success');
-        res.textContent = txt;
-
-    } catch (err) {
-        res.classList.add('error');
-        res.textContent = 'Erro ao descompactar: ' + err.toString();
-    }
-}
 
 
     </script>

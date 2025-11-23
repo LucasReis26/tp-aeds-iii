@@ -97,4 +97,71 @@ public class HuffmanCompressionService {
         if (rel.startsWith("/")) rel = rel.substring(1);
         return rel;
     }
+
+    public class HuffmanStats {
+    private double originalSize;
+    private double compressedSize;
+    private double ratio;
+
+    public HuffmanStats(double originalSize, double compressedSize, double ratio) {
+        this.originalSize = originalSize;
+        this.compressedSize = compressedSize;
+        this.ratio = ratio;
+    }
+
+    public double getOriginalSize() {
+        return originalSize;
+    }
+
+    public double getCompressedSize() {
+        return compressedSize;
+    }
+
+    public double getRatio() {
+        return ratio;
+    }
+}
+
+
+public class HuffmanResult {
+    private byte[] compressedBytes;
+    private HuffmanStats stats;
+
+    public HuffmanResult(byte[] compressedBytes, HuffmanStats stats) {
+        this.compressedBytes = compressedBytes;
+        this.stats = stats;
+    }
+
+    public byte[] getCompressedBytes() {
+        return compressedBytes;
+    }
+
+    public HuffmanStats getStats() {
+        return stats;
+    }
+}
+
+public HuffmanResult createHuffmanArchiveWithStats() throws Exception {
+
+    if (!dataDir.exists() || !dataDir.isDirectory()) {
+        throw new IllegalStateException("Diretório de dados não encontrado: " + dataDir.getAbsolutePath());
+    }
+
+    // Dados originais
+    byte[] originalData = gerarContainer();
+
+    // Compressão
+    byte[] compressedData = Huffman.comprimirBytes(originalData);
+
+    // Cálculo estatísticas
+    double originalSize = originalData.length;
+    double compressedSize = compressedData.length;
+    double ratio = 1 - (compressedSize / originalSize);
+
+    HuffmanStats stats = new HuffmanStats(originalSize, compressedSize, ratio);
+
+    return new HuffmanResult(compressedData, stats);
+}
+
+
 }

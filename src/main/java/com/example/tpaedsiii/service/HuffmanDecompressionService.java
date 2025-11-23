@@ -3,12 +3,12 @@ package com.example.tpaedsiii.service;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.springframework.stereotype.Service;
 
@@ -20,21 +20,25 @@ public class HuffmanDecompressionService {
     private final File dataDir = new File("data");
     private final File defaultBackup = new File(dataDir, "db_backup.huff");
 
-    public void decompressHuffmanToDirectory(byte[] huffBytes, File outputDir) throws Exception {
+    /**
+     * Agora retorna um ZIP contendo todos os arquivos restaurados.
+     */
+    public byte[] decompressHuffmanToZip(byte[] huffBytes) throws Exception {
 
-        if (outputDir == null)
-            outputDir = new File(dataDir, "restored_huffman");
-
-        if (!outputDir.exists())
-            outputDir.mkdirs();
-
-        // Decodifica usando SEU Huffman
+        // Decodifica usando seu algoritmo Huffman
         byte[] container = Huffman.descomprimirBytes(huffBytes);
 
-        restaurarArquivos(container, outputDir);
+        // Converte o container restaurado para ZIP
+        return gerarZip(container);
     }
 
-    private void restaurarArquivos(byte[] container, File outputDir) throws Exception {
+    /**
+     * Lê o "container" restaurado e transforma tudo em um ZIP.
+     */
+    private byte[] gerarZip(byte[] container) throws Exception {
+
+        ByteArrayOutputStream zipBytes = new ByteArrayOutputStream();
+        ZipOutputStream zipOut = new ZipOutputStream(zipBytes);
 
         try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(container))) {
 
@@ -50,43 +54,37 @@ public class HuffmanDecompressionService {
 
                 long fileLen = dis.readLong();
 
-                File outFile = new File(outputDir, relative);
+                byte[] fileContent = new byte[(int) fileLen];
+                dis.readFully(fileContent);
 
-                if (outFile.getParentFile() != null)
-                    outFile.getParentFile().mkdirs();
-
-                try (FileOutputStream fos = new FileOutputStream(outFile)) {
-                    byte[] buffer = new byte[8192];
-                    long remaining = fileLen;
-
-                    while (remaining > 0) {
-                        int toRead = (int) Math.min(buffer.length, remaining);
-                        int read = dis.read(buffer, 0, toRead);
-                        if (read == -1) throw new EOFException("Container truncado.");
-                        fos.write(buffer, 0, read);
-                        remaining -= read;
-                    }
-                }
+                // Adiciona ao ZIP
+                ZipEntry entry = new ZipEntry(relative);
+                zipOut.putNextEntry(entry);
+                zipOut.write(fileContent);
+                zipOut.closeEntry();
             }
         }
+
+        zipOut.close();
+        return zipBytes.toByteArray();
     }
 
-    public void decompressDefaultBackupToRestored() throws Exception {
+    /**
+     * Para quando não for enviado arquivo
+     */
+    public byte[] decompressDefaultBackupToZip() throws Exception {
         if (!defaultBackup.exists())
             throw new FileNotFoundException("Arquivo db_backup.huff não encontrado!");
 
-        byte[] bytes;
-        try (FileInputStream fis = new FileInputStream(defaultBackup);
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            byte[] b = new byte[8192];
+        try (FileInputStream fis = new FileInputStream(defaultBackup)) {
+            byte[] buffer = new byte[8192];
             int r;
-            while ((r = fis.read(b)) != -1)
-                baos.write(b, 0, r);
-
-            bytes = baos.toByteArray();
+            while ((r = fis.read(buffer)) != -1)
+                baos.write(buffer, 0, r);
         }
 
-        decompressHuffmanToDirectory(bytes, null);
+        return decompressHuffmanToZip(baos.toByteArray());
     }
 }
