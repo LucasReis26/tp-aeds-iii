@@ -1,34 +1,33 @@
-package com.example.tpaedsiii.repository.bd.indexes;
+package com.example.tpaedsiii.repository.bd.indexes.ParesHash;
 
 import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash;
 import java.io.*;
 
-public class ParUsuarioLista implements RegistroHash<ParUsuarioLista> {
+public class ParUsuarioReview implements RegistroHash<ParUsuarioReview> {
     private int userId;
-    private int listaId;
+    private int reviewId;
     private static final int SIZE = 8;
 
-    public ParUsuarioLista(int userId, int listaId) { this.userId = userId; this.listaId = listaId; }
-    public ParUsuarioLista() { this(-1, -1); }
+    public ParUsuarioReview(int userId, int reviewId) { this.userId = userId; this.reviewId = reviewId; }
+    public ParUsuarioReview() { this(-1, -1); }
     public int getUserId() { return userId; }
-    public int getListaId() { return listaId; }
+    public int getReviewId() { return reviewId; }
 
-    @Override public int size() { return SIZE; }
+    @Override public short size() { return SIZE; }
 
     @Override
     public void setId(int id) {
-        // Não faz nada. O corpo está intencionalmente vazio.
+        
     }
 
-    @Override
-    public int hashCode() { return this.userId; }
+    @Override public int hashCode() { return this.userId; }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ParUsuarioLista that = (ParUsuarioLista) o;
-        return userId == that.userId && listaId == that.listaId;
+        ParUsuarioReview that = (ParUsuarioReview) o;
+        return userId == that.userId && reviewId == that.reviewId;
     }
 
     @Override
@@ -36,14 +35,14 @@ public class ParUsuarioLista implements RegistroHash<ParUsuarioLista> {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         dos.writeInt(this.userId);
-        dos.writeInt(this.listaId);
+        dos.writeInt(this.reviewId);
         return baos.toByteArray();
-     }
+    }
     @Override
     public void fromByteArray(byte[] ba) throws IOException { 
         ByteArrayInputStream bais = new ByteArrayInputStream(ba);
         DataInputStream dis = new DataInputStream(bais);
         this.userId = dis.readInt();
-        this.listaId = dis.readInt();
+        this.reviewId = dis.readInt();
     }
 }

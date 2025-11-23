@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
+
 import java.net.URI;
 import java.util.List;
 
@@ -47,6 +47,20 @@ public class FilmeController {
             } else {
                 return ResponseEntity.badRequest().body(e.getMessage());
             }
+        }
+    }
+
+    @Operation(summary = "Lista todos os filmes cadastrados no sistema")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista de filmes retornada com sucesso")
+    })
+    @GetMapping
+    public ResponseEntity<?> getAllFilmes() {
+        try {
+            List<Filme> filmes = filmeService.listarTodos();
+            return ResponseEntity.ok(filmes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 
@@ -92,6 +106,22 @@ public class FilmeController {
             }
         }
     }
+
+    @Operation(summary = "Atualiza os dados de um filme existente")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Filme atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Filme não encontrado para atualização")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateFilme(@PathVariable int id, @RequestBody Filme filme) {
+        try {
+            filme.setId(id); // Garante que o ID da URL seja usado
+            boolean atualizado = filmeService.atualizarFilme(filme);
+            return atualizado ? ResponseEntity.ok(filme) : ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
     
     @Operation(summary = "Exclui um filme pelo seu ID")
     @DeleteMapping("/{id}")
@@ -108,3 +138,4 @@ public class FilmeController {
         }
     }
 }
+

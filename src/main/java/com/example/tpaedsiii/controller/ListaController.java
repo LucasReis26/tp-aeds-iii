@@ -6,10 +6,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
+
 import java.net.URI;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class ListaController {
 
     private final ListaService listaService;
 
+    @Autowired
     public ListaController(ListaService listaService) {
         this.listaService = listaService;
     }
@@ -29,7 +31,7 @@ public class ListaController {
     @PostMapping("/user/{userId}/init-padrao")
     public ResponseEntity<?> initializeDefaultLists(@PathVariable int userId) {
         try {
-            listaService.criarListasPadrao(userId);
+            listaService.criarListasPadraoParaUsuario(userId);
             return ResponseEntity.ok().body("Listas padrão criadas/verificadas para o usuário " + userId);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(e.getMessage());
@@ -81,6 +83,17 @@ public class ListaController {
         }
     }
 
+    @Operation(summary = "Atualiza o nome de uma lista pelo seu ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateList(@PathVariable int id, @RequestBody Lista listaData) {
+        try {
+            Lista updatedList = listaService.atualizarLista(id, listaData.getNome());
+            return ResponseEntity.ok(updatedList);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     @Operation(summary = "Busca todas as listas de um usuário, incluindo os filmes de cada uma")
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getListsByUser(@PathVariable int userId) {
@@ -91,7 +104,18 @@ public class ListaController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
-    
+
+    @Operation(summary = "Lista todas as listas cadastradas no sistema")
+    @GetMapping
+    public ResponseEntity<?> getAllLists() {
+        try {
+            List<Lista> listas = listaService.buscarTodas();
+            return ResponseEntity.ok(listas);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
     @Operation(summary = "Exclui uma lista pelo seu ID")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteList(@PathVariable int id) {
@@ -102,3 +126,4 @@ public class ListaController {
         }
     }
 }
+

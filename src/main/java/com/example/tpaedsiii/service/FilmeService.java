@@ -61,6 +61,7 @@ public class FilmeService {
     }
     
     public boolean deletarFilme(int id) throws Exception {
+<<<<<<< HEAD
         if (id <= 0) {
             throw new Exception("ID do filme deve ser maior que zero");
         }
@@ -182,5 +183,18 @@ public class FilmeService {
         if (filme.getRating() < 0 || filme.getRating() > 100) {
             throw new Exception("Rating deve estar entre 0 e 100");
         }
+=======
+        return filmeRepository.excluirFilme(id);
+>>>>>>> testes
+    }
+
+   
+    public boolean atualizarFilme(Filme filme) throws Exception {
+        return filmeRepository.alterarFilme(filme);
+    }
+
+
+    public List<Filme> listarTodos() throws Exception {
+        return filmeRepository.readAll();
     }
 }

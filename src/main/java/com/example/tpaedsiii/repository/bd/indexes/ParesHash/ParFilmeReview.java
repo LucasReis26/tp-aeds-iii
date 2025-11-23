@@ -1,4 +1,4 @@
-package com.example.tpaedsiii.repository.bd.indexes;
+package com.example.tpaedsiii.repository.bd.indexes.ParesHash;
 
 import com.example.tpaedsiii.repository.bd.indexes.base.RegistroHash;
 import java.io.*;
@@ -13,11 +13,10 @@ public class ParFilmeReview implements RegistroHash<ParFilmeReview> {
     public int getFilmeId() { return filmeId; }
     public int getReviewId() { return reviewId; }
 
-    @Override public int size() { return SIZE; }
+    @Override public short size() { return SIZE; }
     
     @Override
     public void setId(int id) {
-        // Não faz nada. O corpo está intencionalmente vazio.
     }
 
     @Override public int hashCode() { return this.filmeId; }

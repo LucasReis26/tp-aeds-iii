@@ -27,6 +27,10 @@ public class UserRepository {
     public User buscarUser(int id) throws Exception {
         return hashUsers.read(id);
     }
+
+    public List<User> listarTodos() throws Exception {
+        return hashUsers.readAll();
+    }
     
     public User buscarPorUsername(String username) throws Exception {
         List<User> todosOsUsuarios = hashUsers.readAll();
