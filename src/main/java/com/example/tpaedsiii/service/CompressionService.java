@@ -1,61 +1,126 @@
 package com.example.tpaedsiii.service;
 
-import com.example.tpaedsiii.repository.bd.compressao.LZW;
-import org.springframework.stereotype.Service;
-
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.example.tpaedsiii.repository.bd.compressao.LZW;
 
 @Service
 public class CompressionService {
 
     private final File dataDir = new File("data");
 
-    public byte[] createLzwArchive() throws Exception {
+    // Classe que contem as estatísticas
+    public static class CompressionStats {
+        private final double originalSize;
+        private final double compressedSize;
+        private final double ratio; // entre 0 e 1
+
+        public CompressionStats(double originalSize, double compressedSize, double ratio) {
+            this.originalSize = originalSize;
+            this.compressedSize = compressedSize;
+            this.ratio = ratio;
+        }
+
+        public double getOriginalSize() { return originalSize; }
+        public double getCompressedSize() { return compressedSize; }
+        public double getRatio() { return ratio; }
+    }
+
+    // Resultado contendo bytes comprimidos e stats
+    public static class CompressionResult {
+        private final byte[] compressedBytes;
+        private final CompressionStats stats;
+
+        public CompressionResult(byte[] compressedBytes, CompressionStats stats) {
+            this.compressedBytes = compressedBytes;
+            this.stats = stats;
+        }
+
+        public byte[] getCompressedBytes() { return compressedBytes; }
+        public CompressionStats getStats() { return stats; }
+    }
+
+    /**
+     * Gera o container (lista de arquivos) e comprime com LZW.
+     * @return CompressionResult com bytes comprimidos e estatísticas
+     * @throws Exception
+     */
+    public CompressionResult createLzwArchiveWithStats() throws Exception {
         if (!dataDir.exists() || !dataDir.isDirectory()) {
             throw new IllegalStateException("Diretório de dados não encontrado: " + dataDir.getAbsolutePath());
         }
 
-        byte[] archiveBytes;
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             DataOutputStream dos = new DataOutputStream(baos)) {
+        // Gera container binário (nome relativo + tamanho + conteúdo)
+        byte[] originalData = gerarContainer();
 
-            List<File> files = listFilesRecursively(dataDir);
-            dos.writeInt(files.size());
-            for (File f : files) {
-                String relative = getRelativePath(dataDir, f);
-                byte[] nameBytes = relative.getBytes(StandardCharsets.UTF_8);
-                dos.writeInt(nameBytes.length);
-                dos.write(nameBytes);
-                long fileLen = f.length();
-                dos.writeLong(fileLen);
+        // Comprime com LZW (usa sua classe existente)
+        byte[] compressedData = LZW.codifica(originalData);
 
-                try (FileInputStream fis = new FileInputStream(f)) {
-                    byte[] buf = new byte[8192];
-                    int r;
-                    while ((r = fis.read(buf)) != -1) dos.write(buf, 0, r);
-                }
-            }
-            dos.flush();
-            archiveBytes = baos.toByteArray();
-        }
+        // Estatísticas
+        double originalSize = originalData.length;
+        double compressedSize = compressedData.length;
+        double ratio = 0.0;
+        if (originalSize > 0) ratio = 1.0 - (compressedSize / originalSize);
 
-        // chama seu LZW (do package repository.bd.compressao)
-        byte[] compressed = LZW.codifica(archiveBytes);
-        return compressed;
+        CompressionStats stats = new CompressionStats(originalSize, compressedSize, ratio);
+
+        // Retorna bytes + stats
+        return new CompressionResult(compressedData, stats);
     }
 
-    private List<File> listFilesRecursively(File dir) {
-        List<File> files = new ArrayList<>();
-        File[] entries = dir.listFiles();
-        if (entries == null) return files;
-        for (File f : entries) {
-            if (f.isDirectory()) files.addAll(listFilesRecursively(f));
-            else files.add(f);
+
+    private byte[] gerarContainer() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dos = new DataOutputStream(baos);
+
+        List<File> arquivos = listarArquivos(dataDir);
+
+        dos.writeInt(arquivos.size());
+
+        for (File f : arquivos) {
+            String relative = getRelativePath(dataDir, f);
+            byte[] nomeBytes = relative.getBytes(StandardCharsets.UTF_8);
+
+            dos.writeInt(nomeBytes.length);
+            dos.write(nomeBytes);
+
+            long tamanho = f.length();
+            dos.writeLong(tamanho);
+
+            try (InputStream in = new FileInputStream(f)) {
+                byte[] buffer = new byte[8192];
+                int l;
+                while ((l = in.read(buffer)) != -1) {
+                    dos.write(buffer, 0, l);
+                }
+            }
         }
-        return files;
+
+        dos.flush();
+        return baos.toByteArray();
+    }
+
+    private List<File> listarArquivos(File dir) {
+        List<File> list = new ArrayList<>();
+        File[] arr = dir.listFiles();
+        if (arr == null) return list;
+
+        for (File f : arr) {
+            if (f.isDirectory()) list.addAll(listarArquivos(f));
+            else list.add(f);
+        }
+
+        return list;
     }
 
     private String getRelativePath(File base, File file) {
@@ -65,5 +130,4 @@ public class CompressionService {
         if (rel.startsWith("/")) rel = rel.substring(1);
         return rel;
     }
-    
 }

@@ -1,16 +1,15 @@
 package com.example.tpaedsiii.controller;
 
+import com.example.tpaedsiii.service.DecompressionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.tpaedsiii.service.DecompressionService;
-
 @RestController
+@RequestMapping("/api")
 public class DecompressionController {
 
     private final DecompressionService decompressionService;
@@ -20,21 +19,35 @@ public class DecompressionController {
         this.decompressionService = decompressionService;
     }
 
-    @PostMapping(path = "/api/decompress-db", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> decompressDb(@RequestPart(value = "file", required = false) MultipartFile file) {
+    /**
+     * Exige um arquivo .lzw enviado no campo "file" (multipart).
+     * Retorna um ZIP com os arquivos restaurados.
+     */
+    @PostMapping(path = "/decompress-db", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "application/zip")
+    public ResponseEntity<byte[]> decompressDb(@RequestPart("file") MultipartFile file) {
         try {
-            if (file != null && !file.isEmpty()) {
-                byte[] bytes = file.getBytes();
-                decompressionService.decompressLzwToDirectory(bytes, null);
-                return ResponseEntity.ok("Descompactação concluída em data/restored/ (a partir do arquivo enviado).");
-            } else {
-                decompressionService.decompressDefaultBackupToRestored();
-                return ResponseEntity.ok("Descompactação concluída em data/restored/ (a partir de data/db_backup.lzw).");
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN).body("Envie um arquivo .lzw no campo 'file'.".getBytes());
             }
+
+            byte[] lzwBytes = file.getBytes();
+            byte[] zipBytes = decompressionService.decompressLzwToZipBytes(lzwBytes);
+
+            String filename = "db_restored.zip";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
+            headers.add(HttpHeaders.CONTENT_LENGTH, String.valueOf(zipBytes.length));
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(MediaType.parseMediaType("application/zip"))
+                    .body(zipBytes);
+
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Erro na descompactação: " + e.getMessage());
+            String msg = "Erro ao descompactar/gerar ZIP: " + e.getMessage();
+            return ResponseEntity.status(500).contentType(MediaType.TEXT_PLAIN).body(msg.getBytes());
         }
     }
-    
 }
