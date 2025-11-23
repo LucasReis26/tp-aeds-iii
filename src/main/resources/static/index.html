@@ -307,6 +307,62 @@
                 <pre id="lista-manage-result"></pre>
             </div>
         </section>
+        <!-- SEÇÃO: Compactação / Descompactação -->
+
+
+<!-- SEÇÃO: Compactação / Descompactação -->
+<section class="entity-column">
+    <h2>Compactação</h2>
+
+    <!-- LZW -->
+    <div class="operation">
+        <h3>LZW</h3>
+        <p style="color:var(--text-muted); margin-bottom: 1rem;">
+            Compacte todo o diretório <code>data/</code> em <code>db_backup.lzw</code>.
+        </p>
+
+        <button onclick="compactarLZW()">Compactar (LZW)</button>
+
+        <div style="margin-top:0.75rem; margin-bottom:0.25rem;">
+            <input id="inputRestoreFile" type="file" accept=".lzw"
+                style="width:100%; padding:8px; border-radius:6px; background:#3a3a3c; border:1px solid #555; color:var(--text-color);">
+        </div>
+
+        <button style="margin-top:6px;" onclick="descompactarLZW()">Descompactar (LZW)</button>
+
+        <pre id="resultadoLZW" style="margin-top:12px;"></pre>
+    </div>
+
+<!-- HUFFMAN -->
+<div class="operation">
+    <h3>Huffman</h3>
+    <p style="color:var(--text-muted); margin-bottom: 1rem;">
+        Compacte todo o diretório <code>data/</code> em <code>db_backup.huf</code>.
+    </p>
+
+    <button onclick="compactarHuffman()">Compactar (Huffman)</button>
+
+    <div style="margin-top:0.75rem; margin-bottom:0.25rem;">
+        <input id="inputRestoreHuff" type="file" accept=".huf"
+            style="width:100%; padding:8px; border-radius:6px; background:#3a3a3c; border:1px solid #555; color:var(--text-color);">
+    </div>
+
+    <button style="margin-top:6px;" onclick="descompactarHuffman()">Descompactar (Huffman)</button>
+
+    <pre id="resultadoHuffman" style="margin-top:12px;"></pre>
+
+    <div id="taxasHuffman" style="display:none; margin-top:15px; padding:12px; background:#1c1c1e; border-radius:8px; border:1px solid #333;">
+        <h4 style="margin-top:0;">Taxas de Compressão (Huffman)</h4>
+        <p><strong>Tamanho Original:</strong> <span id="huff-orig"></span> bytes</p>
+        <p><strong>Tamanho Comprimido:</strong> <span id="huff-comp"></span> bytes</p>
+        <p><strong>Taxa de Compressão:</strong> <span id="huff-taxa"></span>%</p>
+    </div>
+</div>
+
+
+</section>
+
+
 
     </main>
 
@@ -406,6 +462,225 @@
             };
             handleApiCall('review-update-result', 'PUT', `/reviews/${reviewId}`, body, headers);
         }
+    
+       
+        async function compactarLZW() {
+            const resultadoEl = document.getElementById('resultadoLZW');
+            resultadoEl.className = '';
+            resultadoEl.textContent = 'Gerando arquivo...';
+
+            try {
+         
+            const headers = {};
+            const tokenMeta = document.querySelector('meta[name="_csrf"]');
+            const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+            if (tokenMeta && headerMeta) {
+                headers[ headerMeta.getAttribute('content') ] = tokenMeta.getAttribute('content');
+            }
+
+            const resp = await fetch(`${API_BASE_URL}/compress-db`, {
+                method: 'POST',
+                headers: headers
+            });
+
+            if (!resp.ok) {
+                const txt = await resp.text();
+                resultadoEl.classList.add('error');
+                resultadoEl.textContent = 'Erro: ' + txt;
+                return;
+            }
+
+            const blob = await resp.blob();
+
+         
+            const cd = resp.headers.get('Content-Disposition') || resp.headers.get('content-disposition');
+            let filename = 'db_backup.lzw';
+            if (cd) {
+                const m = /filename="?([^"]+)"?/.exec(cd);
+                if (m && m[1]) filename = m[1];
+            }
+
+           
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+
+            resultadoEl.classList.add('success');
+            resultadoEl.textContent = 'Download iniciado: ' + filename;
+            } catch (err) {
+            console.error(err);
+            resultadoEl.classList.add('error');
+            resultadoEl.textContent = 'Erro ao compactar: ' + err.toString();
+            } finally {
+            setTimeout(()=> { resultadoEl.textContent = ''; resultadoEl.className = ''; }, 4000);
+            }
+        }
+
+        async function descompactarLZW() {
+            const resultadoEl = document.getElementById('resultadoLZW');
+            const inputRestoreFile = document.getElementById('inputRestoreFile');
+            resultadoEl.className = '';
+            resultadoEl.textContent = 'Executando descompactação...';
+
+            try {
+       
+            const headers = {};
+            const tokenMeta = document.querySelector('meta[name="_csrf"]');
+            const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+            if (tokenMeta && headerMeta) {
+                headers[ headerMeta.getAttribute('content') ] = tokenMeta.getAttribute('content');
+            }
+
+            const fd = new FormData();
+            if (inputRestoreFile && inputRestoreFile.files.length > 0) {
+                fd.append('file', inputRestoreFile.files[0]);
+            }
+
+            const resp = await fetch(`${API_BASE_URL}/decompress-db`, {
+                method: 'POST',
+                headers: headers, 
+                body: fd
+            });
+
+            const text = await resp.text();
+            if (!resp.ok) {
+                resultadoEl.classList.add('error');
+                resultadoEl.textContent = 'Erro: ' + text;
+            } else {
+                resultadoEl.classList.add('success');
+                resultadoEl.textContent = text;
+            }
+            } catch (err) {
+            console.error(err);
+            resultadoEl.classList.add('error');
+            resultadoEl.textContent = 'Erro ao descompactar: ' + err.toString();
+            } finally {
+            setTimeout(()=> { resultadoEl.textContent = ''; resultadoEl.className = ''; }, 5000);
+            }
+        }
+
+async function compactarHuffman() {
+    const resultadoEl = document.getElementById('resultadoHuffman');
+    const taxasBox = document.getElementById('taxasHuffman');
+    resultadoEl.className = '';
+    resultadoEl.textContent = 'Gerando arquivo...';
+    taxasBox.style.display = 'none';
+
+    try {
+        const resp = await fetch(`${API_BASE_URL}/compress-db-huffman`, {
+            method: 'POST'
+        });
+
+        if (!resp.ok) {
+            const txt = await resp.text();
+            resultadoEl.classList.add('error');
+            resultadoEl.textContent = 'Erro: ' + txt;
+            return;
+        }
+
+        const blob = await resp.blob();
+
+        // ---------------------------
+        // 📌 LEITURA DOS HEADERS
+        // ---------------------------
+        const origSize = Number(resp.headers.get("X-Original-Size"));
+        const compSize = Number(resp.headers.get("Content-Length"));
+        const taxa = ((1 - compSize / origSize) * 100).toFixed(2);
+
+        // Exibir na tela
+        document.getElementById("huff-orig").textContent = origSize;
+        document.getElementById("huff-comp").textContent = compSize;
+        document.getElementById("huff-taxa").textContent = taxa;
+        taxasBox.style.display = 'block';
+
+        // ---------------------------
+        // 📌 DOWNLOAD AUTOMÁTICO
+        // ---------------------------
+        const cd = resp.headers.get("Content-Disposition");
+        let filename = "db_backup.huf";
+        if (cd) {
+            const m = /filename="?([^"]+)"?/.exec(cd);
+            if (m && m[1]) filename = m[1];
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        resultadoEl.classList.add('success');
+        resultadoEl.textContent = 'Download iniciado: ' + filename;
+
+    } catch (err) {
+        resultadoEl.classList.add('error');
+        resultadoEl.textContent = 'Erro ao compactar: ' + err.toString();
+    }
+}
+
+async function descompactarHuffman() {
+    const resultadoEl = document.getElementById('resultadoHuffman');
+    const inputFile = document.getElementById('inputRestoreHuff');
+
+    resultadoEl.className = '';
+    resultadoEl.textContent = 'Gerando arquivo ZIP...';
+
+    try {
+        const form = new FormData();
+        if (inputFile.files.length > 0) {
+            form.append("file", inputFile.files[0]);
+        }
+
+        const resp = await fetch(`${API_BASE_URL}/decompress-db-huffman`, {
+            method: "POST",
+            body: form
+        });
+
+        if (!resp.ok) {
+            const txt = await resp.text();
+            resultadoEl.classList.add('error');
+            resultadoEl.textContent = 'Erro: ' + txt;
+            return;
+        }
+
+        // O servidor deve retornar um ZIP agora
+        const blob = await resp.blob();
+
+        let filename = "restaurado.zip";
+        const cd = resp.headers.get("Content-Disposition");
+        if (cd) {
+            const m = /filename="?([^"]+)"?/.exec(cd);
+            if (m && m[1]) filename = m[1];
+        }
+
+        // Download automático
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        resultadoEl.classList.add('success');
+        resultadoEl.textContent = "Download iniciado: " + filename;
+
+    } catch (err) {
+        resultadoEl.classList.add('error');
+        resultadoEl.textContent = "Erro ao descompactar: " + err.toString();
+    }
+}
+
+
 
     </script>
 </body>
