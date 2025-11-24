@@ -30,9 +30,6 @@ public class HuffmanCompressionService {
         // Comprime os dados com SEU algoritmo Huffman
         byte[] compressedData = Huffman.comprimirBytes(originalData);
 
-        // ==========================
-        // 🔥 Cálculo automático
-        // ==========================
         double originalSize = originalData.length;
         double compressedSize = compressedData.length;
 
