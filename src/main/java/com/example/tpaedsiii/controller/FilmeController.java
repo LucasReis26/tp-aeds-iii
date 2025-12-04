@@ -111,5 +111,27 @@ public class FilmeController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+	@Operation(summary = "Busca filmes por substring usando o algoritmo KMP")
+    @GetMapping("/search/kmp")
+    public ResponseEntity<?> searchKMP(@RequestParam String pattern) {
+        try {
+            List<Filme> filmes = filmeService.buscarPorTituloKMP(pattern);
+            return ResponseEntity.ok(filmes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
+
+    @Operation(summary = "Busca filmes por substring usando o algoritmo Boyer-Moore (Bad Character)")
+    @GetMapping("/search/bm")
+    public ResponseEntity<?> searchBoyerMoore(@RequestParam String pattern) {
+        try {
+            List<Filme> filmes = filmeService.buscarPorTituloBoyerMoore(pattern);
+            return ResponseEntity.ok(filmes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
+    }
 }
 

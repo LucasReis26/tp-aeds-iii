@@ -5,9 +5,10 @@ import com.example.tpaedsiii.repository.bd.indexes.base.HashExtensivel;
 import com.example.tpaedsiii.repository.bd.indexes.base.ArvoreBMais;
 import com.example.tpaedsiii.repository.bd.indexes.ParesArvoreB.ParIntInt;
 import com.example.tpaedsiii.repository.bd.indexes.ParesArvoreB.ParStringInt;
+import com.example.tpaedsiii.repository.bd.search.KMP;
+import com.example.tpaedsiii.repository.bd.search.BoyerMoore;
 import org.springframework.stereotype.Repository;
 import jakarta.annotation.PostConstruct;
-
 import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
@@ -126,6 +127,43 @@ public class FilmeRepository {
 
     public List<Filme> readAll() throws Exception {
         return hashFilmes.readAll();
+    }
+
+	/**
+     * Busca filmes cujo título contenha o padrão, usando o algoritmo KMP.
+     * NOTA: Este método faz uma varredura sequencial dos metadados de filmes.
+     * @param pattern O padrão (substring) a ser buscado.
+     * @return Lista de Filmes que contêm o padrão no título.
+     */
+    public List<Filme> searchByTitleKMP(String pattern) throws Exception {
+        List<Filme> allFilmes = hashFilmes.readAll(); // Leitura sequencial de todos os dados (O(N))
+        List<Filme> results = new ArrayList<>();
+        
+        for (Filme filme : allFilmes) {
+            // Aplica o KMP (ignora maiúsculas/minúsculas)
+            if (KMP.search(filme.getTitle().toLowerCase(), pattern.toLowerCase()).size() > 0) {
+                results.add(filme);
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Busca filmes cujo título contenha o padrão, usando o algoritmo Boyer-Moore.
+     * @param pattern O padrão (substring) a ser buscado.
+     * @return Lista de Filmes que contêm o padrão no título.
+     */
+    public List<Filme> searchByTitleBoyerMoore(String pattern) throws Exception {
+        List<Filme> allFilmes = hashFilmes.readAll(); // Leitura sequencial de todos os dados (O(N))
+        List<Filme> results = new ArrayList<>();
+        
+        for (Filme filme : allFilmes) {
+            // Aplica o Boyer-Moore (ignora maiúsculas/minúsculas)
+            if (BoyerMoore.search(filme.getTitle().toLowerCase(), pattern.toLowerCase()).size() > 0) {
+                results.add(filme);
+            }
+        }
+        return results;
     }
 }
 

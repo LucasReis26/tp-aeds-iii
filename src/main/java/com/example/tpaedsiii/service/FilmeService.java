@@ -39,4 +39,18 @@ public class FilmeService {
     public List<Filme> listarTodos() throws Exception {
         return filmeRepository.readAll();
     }
+
+	/**
+     * Busca filmes por substring no título usando o algoritmo KMP.
+     */
+    public List<Filme> buscarPorTituloKMP(String pattern) throws Exception {
+        return filmeRepository.searchByTitleKMP(pattern);
+    }
+    
+    /**
+     * Busca filmes por substring no título usando o algoritmo Boyer-Moore.
+     */
+    public List<Filme> buscarPorTituloBoyerMoore(String pattern) throws Exception {
+        return filmeRepository.searchByTitleBoyerMoore(pattern);
+    }
 }
