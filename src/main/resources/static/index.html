@@ -362,7 +362,26 @@
 
 </section>
 
-
+<section class="entity-column">
+    <h2>Casamento de Padrões (AEDS)</h2>
+    <div class="operation">
+        <h3>Buscar por Substring no Título</h3>
+        <p style="color:var(--text-muted); margin-bottom: 1rem;">
+            Teste a eficiência dos algoritmos KMP e Boyer-Moore. A busca é Case-Insensitive (não sensível à caixa).
+        </p>
+        
+        <input id="pattern-input" placeholder="Padrão de busca (Substring)">
+        
+        <select id="algorithm-select" style="width: 100%; padding: 12px 15px; margin-bottom: 1rem; border-radius: 8px; background-color: #3a3a3c; color: var(--text-color); border: 1px solid #555;">
+            <option value="kmp">1. Knuth-Morris-Pratt (KMP)</option>
+            <option value="bm">2. Boyer-Moore (BM)</option>
+        </select>
+        
+        <button onclick="searchPattern()">Executar Busca</button>
+        
+        <pre id="pattern-result"></pre>
+    </div>
+</section>
 
     </main>
 
@@ -704,6 +723,29 @@ async function descompactarHuffman() {
 }
 
 
+function searchPattern() {
+    const pattern = getValue('pattern-input');
+    const algorithm = document.getElementById('algorithm-select').value;
+    const resultDivId = 'pattern-result';
+
+    if (!pattern) {
+        alert('Por favor, digite um padrão para a busca.');
+        return;
+    }
+
+    let endpoint = '';
+    if (algorithm === 'kmp') {
+        endpoint = `/filmes/search/kmp?pattern=${encodeURIComponent(pattern)}`;
+    } else if (algorithm === 'bm') {
+        endpoint = `/filmes/search/bm?pattern=${encodeURIComponent(pattern)}`;
+    } else {
+        document.getElementById(resultDivId).textContent = 'Algoritmo inválido selecionado.';
+        return;
+    }
+
+    // A função handleApiCall fará o fetch e tratará o resultado/erro
+    handleApiCall(resultDivId, 'GET', endpoint);
+}
 
     </script>
 </body>
